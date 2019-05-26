@@ -1,0 +1,21 @@
+;; This is a comment.
+;;
+
+;; Host (Ruby) Interop:
+
+::puts 1 + 2
+;; => nil (with 3 printed to stdout)
+
+::"omg".upcase
+;; => OMG
+
+::Array.new
+;; => []
+
+::Array
+;; => %host::Array
+
+::puts
+;; => %host::Method
+
+;; -----
