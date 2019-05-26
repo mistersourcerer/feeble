@@ -1,5 +1,7 @@
 module Feeble::Runtime
   class List
+    include Enumerable
+
     class EmptyList
       def first
         List::EMPTY

@@ -30,6 +30,14 @@ module Feeble::Runtime
       end
     end
 
+    context "when behaving as a function" do
+      describe "symbol parameter" do
+        it "resolves the value associated with it" do
+          env.register Symbol.new(:omg), "lol"
+
+          expect(env.invoke(Symbol.new(:omg))).to eq "lol"
+        end
+      end
     end
   end
 end
