@@ -14,8 +14,7 @@ module Feeble::Runtime
     end
 
     def fn?(obj)
-      # TODO: Replace for the type as soon as we have it
-      obj.respond_to?(:invoke)
+      obj.is_a?(Feeble::Runtime::Invokable)
     end
   end
 end

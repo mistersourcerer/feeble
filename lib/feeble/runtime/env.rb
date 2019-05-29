@@ -1,34 +1,14 @@
 module Feeble::Runtime
   class Env
-    # Could be replace for a decent map implementation somewhen
-    class Map
-      def initialize(store = {})
-        @store = store
-      end
-
-      def put(symbol, value)
-        @store[symbol] = value
-      end
-
-      def get(symbol)
-        @store[symbol]
-      end
-
-      def merge(map)
-        self.class.new map.store.merge(@store)
-      end
-
-      protected
-
-      def store
-        @store
-      end
-    end
+    include Invokable
 
     def initialize(registry = Map.new)
       @registry = registry
       @verify = Verifier.new
       @envs = []
+
+      register_lookup_invokation
+      register_storing_invokation
     end
 
     def lookup(id)
@@ -40,13 +20,10 @@ module Feeble::Runtime
     end
 
     def wrap(env)
+      return self if !env
       raise "Expected #{env} to be an Env" unless @verify.env? env
 
       self.class.new env.registry.merge(@registry)
-    end
-
-    def invoke(*params)
-      apply_1 params.first if params.length == 1
     end
 
     protected
@@ -57,8 +34,22 @@ module Feeble::Runtime
 
     private
 
-    def apply_1(param)
-      return lookup param if @verify.symbol? param
+    def register_lookup_invokation
+      add_arity(Symbol.new(:lookup)) { |env|
+        name = env.lookup Symbol.new(:lookup)
+        @verify.symbol?(name) ? self.lookup(name) : nil
+      }
+    end
+
+    def register_storing_invokation
+      add_arity(Symbol.new(:name), Symbol.new(:value)) { |env|
+        name = env.lookup Symbol.new(:name)
+        if !@verify.symbol?(name)
+          raise "Only Symbols can be associated with values, not #{name}"
+        end
+
+        self.register name, env.lookup(Symbols.new(:value))
+      }
     end
   end
 end

@@ -9,17 +9,8 @@ module Feeble::Runtime
     end
 
     def invoke(*params, scope: nil)
-      current_invokation = shape_for_arity(params)
-      current_invokation ||= var_args if var_args
-      raise "No function with arity #{params.count} was found." unless current_invokation
-
-      internal_env = bind_args current_invokation, params
-      env =
-        if scope
-          internal_env.wrap scope
-        else
-          internal_env
-        end
+      current_invokation = current_invokation_from(params)
+      env = bind_args(current_invokation, params).wrap(scope)
 
       current_invokation.call env
     end
@@ -32,23 +23,32 @@ module Feeble::Runtime
       @arities ||= {}
     end
 
+    def current_invokation_from(params)
+      current_invokation = shape_for_arity(params) || var_args
+
+      if !current_invokation
+        raise "No function with arity #{params.count} was found."
+      else
+        current_invokation
+      end
+    end
+
     def shape_for_arity(args)
       arities[args.length]
     end
 
     def bind_args(invokation_shape, args)
       Env.new.tap { |env|
-        var_args_invokation = invokation_shape.params.count == 1 && args.count > 1
-        if var_args_invokation
+        if var_args?(invokation_shape, args)
           env.register invokation_shape.params.first, args
         else
-          invokation_shape
-            .params
-            .each_with_index do |param, index|
-              env.register param, args[index]
-            end
+          invokation_shape.register env, args
         end
       }
+    end
+
+    def var_args?(invokation_shape, args)
+      invokation_shape.params.count == 1 && args.count > 1
     end
   end
 
@@ -62,6 +62,12 @@ module Feeble::Runtime
 
     def call(env)
       @procedure.call env
+    end
+
+    def register(env, args)
+      params.each_with_index do |param, index|
+        env.register param, args[index]
+      end
     end
   end
 end
