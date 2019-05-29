@@ -2,7 +2,6 @@ module Feeble::Language
   include Feeble::Runtime
 
   class Host < Env
-    # Just a "blueprint" for how invokables should look like
     class Dot
       include Feeble::Runtime
       include Feeble::Runtime::Invokable
@@ -13,19 +12,15 @@ module Feeble::Language
         add_var_args(Symbol.new(:path)) { |env|
           path = env.lookup(Symbol.new(:path))
           target = path.shift
+          raise "#{target} is not defined by %host." unless defined? target
+
           method = path.shift.id
           if path.count > 0
-            target.send method, params
+            target.send(method, *path)
           else
             target.send method
           end
         }
-      end
-
-      private
-
-      def ruby(symbol)
-        symbol.id
       end
     end
 
@@ -35,10 +30,26 @@ module Feeble::Language
     end
   end
 
+  module Math
+    class Plus
+      include Feeble::Runtime
+      include Feeble::Runtime::Invokable
+
+      def initialize
+        add_arity(Symbol.new(:num1), Symbol.new(:num2)) { |env|
+          env.lookup(Symbol.new(:num1)) + env.lookup(Symbol.new(:num2))
+        }
+      end
+    end
+  end
+
   class Fbl < Env
+    include Feeble::Runtime
+
     def initialize
       super
-      register Feeble::Runtime::Symbol.new("%host"), Host.new
+      register Symbol.new("%host"), Host.new
+      register Symbol.new("+"), Math::Plus.new
     end
 
     def invoke(*params)

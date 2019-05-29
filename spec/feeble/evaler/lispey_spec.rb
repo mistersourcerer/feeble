@@ -4,22 +4,30 @@ module Feeble::Evaler
   RSpec.describe Lispey do
     subject(:evaler) { described_class.new }
 
+    describe "#eval" do
+      it "interprets a list as an invocation" do
+        sum = List.create Symbol.new("+"), 1, 2
+
+        expect(evaler.eval(sum)).to eq 3
+      end
+    end
+
     context "interop" do
       it "invokes method in the Kernel scope" do
-        pending
-        puts_invokation = List.create(
-          Symbol.new("%host"), Symbol.new("puts"), 1)
+        # ::print 1
 
-        # should return nil and puts to stdout
+        puts_invokation = List.create(
+          Symbol.new("%host"),
+          Symbol.new("."),
+          Symbol.new("Kernel"),
+          Symbol.new("print"),
+          1)
+
+        # should return nil and print to stdout
         expect {
           expect(evaler.eval(puts_invokation)).to eq nil
         }.to output("1").to_stdout
       end
-
-      [
-        :"%host",
-        [:"."]
-      ]
 
       it "invokes method on object from host" do
         # ::"lol".upcase
@@ -31,15 +39,6 @@ module Feeble::Evaler
           Symbol.new("upcase"))
 
         expect(evaler.eval(invokation)).to eq "LOL"
-      end
-    end
-
-    describe "#eval" do
-      it "interprets a list as an invocation" do
-        pending
-        sum = List.create Symbol.new("+"), 1, 2
-
-        expect(evaler.eval(sum)).to eq 3
       end
     end
   end

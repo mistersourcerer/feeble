@@ -34,9 +34,6 @@ module Feeble::Evaler
 
     private
 
-    def curry(obj, params)
-    end
-
     def apply_fn(fn, params, env)
       fn.invoke(params, env: env)
     end
