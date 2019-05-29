@@ -1,6 +1,11 @@
 module Feeble::Runtime
   module Invokable
+    class InvalidParamName < StandardError; end
+
     def add_arity(*param_names, &procedure)
+      if name = param_names.find { |name| !verify.symbol?(name) }
+        raise InvalidParamName.new("expected #{name} to be a Symbol")
+      end
       arities[param_names.count] = InvokationShape.new param_names, procedure
     end
 
@@ -21,6 +26,10 @@ module Feeble::Runtime
 
     def arities
       @arities ||= {}
+    end
+
+    def verify
+      @verify ||= Verifier.new
     end
 
     def current_invokation_from(params)

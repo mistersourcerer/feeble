@@ -16,7 +16,13 @@ module Feeble::Runtime
           expect(fn.invoke(:one, :two)).to eq 2
         end
 
-        it "raises if non-symbols are passed as param names"
+        it "raises if non-symbols are passed as param names" do
+          expect { fn.add_arity(:oh_no) }
+            .to raise_error(Invokable::InvalidParamName)
+
+          expect { fn.add_arity(1) }
+            .to raise_error(Invokable::InvalidParamName)
+        end
       end
 
       describe "#var_args" do
