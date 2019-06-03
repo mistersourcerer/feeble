@@ -3,24 +3,24 @@
 
 ;; Host (Ruby) Interop:
 
-::puts 1
+::puts(1)
 ;; 1
 ;; => nil
 
-::puts 1 + 2
+::puts(1 + 2)
 ;; 3
 ;; => nil (with 3 printed to stdout)
 
-::"omg".upcase
+::"omg".upcase()
 ;; => OMG
 
-::Array.new
+::"lol".upcase.length()
+;; => 3
+
+::Array.new()
 ;; => []
 
 ::Array
-;; => %host::Array
-
-::puts
-;; => %host::Method
+;; => %host.Array
 
 ;; -----
