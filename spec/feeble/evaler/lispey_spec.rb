@@ -13,8 +13,33 @@ module Feeble::Evaler
     end
 
     context "interop" do
+      describe "::" do
+        it "translates 'square' invokation into host invokation" do
+          pending
+          # ::print(1)
+
+          host_invokation = List.create(
+            Symbol.new("::"),
+            Symbol.new("print"),
+            1
+          )
+
+          expect {
+            expect(evaler.eval(host_invokation)).to eq nil
+          }.to output("1").to_stdout
+
+          # expect(evaler.eval(host_invokation)).to eq List.create(
+          #   Symbol.new("%host"),
+          #   Symbol.new("."),
+          #   Symbol.new("Kernel"),
+          #   Symbol.new("print"),
+          #   1
+          # )
+        end
+      end
+
       it "invokes method in the Kernel scope" do
-        # ::print 1
+        # ::print(1)
 
         puts_invokation = List.create(
           Symbol.new("%host"),
@@ -30,7 +55,7 @@ module Feeble::Evaler
       end
 
       it "invokes method on object from host" do
-        # ::"lol".upcase
+        # ::"lol".upcase()
 
         invokation = List.create(
           Symbol.new("%host"),

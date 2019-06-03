@@ -17,6 +17,9 @@ module Feeble::Language::Host
     def invokation_from(path)
       [
         path.shift,
+        # TODO: change this second bit
+        # for an array with a (possible) succetion of
+        # dot calls, to cover things like: "omg".upcase.length
         path.shift.id,
         path
       ]
