@@ -39,5 +39,31 @@ module Feeble::Runtime
         end
       end
     end
+
+    context "knows how to search for registered functions" do
+      describe "#fn_lookup" do
+        class Fn
+          include Feeble::Runtime::Invokable
+        end
+
+        let(:fn) { Fn.new }
+
+        it "returns the associated function based on the Symbol" do
+          env.register Symbol.new(:fn), fn
+
+          expect(env.fn_lookup(Symbol.new(:fn))).to eq fn
+        end
+
+        it "returns nil if the associated value is not a function" do
+          env.register Symbol.new(:fake), "something"
+
+          expect(env.fn_lookup(Symbol.new(:fake))).to eq nil
+        end
+
+        it "returns nil if the Symbol is not associated" do
+          expect(env.fn_lookup(Symbol.new(:nada))).to eq nil
+        end
+      end
+    end
   end
 end
