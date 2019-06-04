@@ -1,5 +1,7 @@
 module Feeble::Reader
   class Char
+    # TODO: consider enumerable...
+
     def initialize(string)
       # TODO: if string is a IO stream already, do not convert it.
       @io = StringIO.new(string)
