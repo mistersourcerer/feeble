@@ -70,5 +70,42 @@ module Feeble::Runtime
         end
       end
     end
+
+    describe "#props" do
+      it "associates value with a given symbol" do
+        fn.put Symbol.new(:this), "is good"
+
+        expect(fn.get(Symbol.new(:this))).to eq "is good"
+      end
+
+      it "associates true with property if no value is given" do
+        fn.put Symbol.new(:you_sure?)
+
+        expect(fn.get(Symbol.new(:you_sure?))).to eq true
+      end
+
+      describe "#is? as a shorthand for accessing boolean props" do
+        it "returns true for existent true props" do
+          fn.put Symbol.new(:awesome)
+
+          expect(fn.is? :awesome).to eq true
+          expect(fn.is? "awesome").to eq true
+        end
+
+        it "returns false for false/inexistent props" do
+          fn.put Symbol.new(:awesome), false
+
+          expect(fn.is? :awesome).to eq false
+          expect(fn.is? "awesome").to eq false
+          expect(fn.is? "anything?").to eq false
+        end
+
+        it "returns false for non-true props" do
+          fn.put Symbol.new(:awesome), "true"
+
+          expect(fn.is? :awesome).to eq false
+        end
+      end
+    end
   end
 end

@@ -20,6 +20,21 @@ module Feeble::Runtime
       current_invokation.call env
     end
 
+    def put(property, value = true)
+      # TODO: raise if property isn't a symbol
+      _props.put property, value
+    end
+
+    def get(property)
+      _props.get property
+    end
+
+    def is?(property_name)
+      get(Symbol.new(property_name)) == true
+    end
+
+    # TODO: so something about the private methods included here.
+    # Maybe prefix them (a simple _ should be enough).
     private
 
     attr_accessor :var_args
@@ -58,6 +73,10 @@ module Feeble::Runtime
 
     def var_args?(invokation_shape, args)
       invokation_shape.params.count == 1 && args.count > 1
+    end
+
+    def _props
+      @_props ||= Map.new
     end
   end
 
