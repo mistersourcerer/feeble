@@ -34,9 +34,16 @@ module Feeble::Evaler
     end
 
     def do_invoke(env, form)
-      result = env.invoke(form.first).invoke(*form.rest.to_a, scope: env)
+      fn = env.invoke(form.first)
+      result = invoke_fn fn, form.rest.to_a, env
 
       @verify.list?(result) ? self.eval(result, env: env) : result
+    end
+
+    def invoke_fn(fn, params, env)
+      return fn.invoke(params, scope: env) if fn.is? :special
+
+      fn.invoke(*params, scope: env)
     end
   end
 end

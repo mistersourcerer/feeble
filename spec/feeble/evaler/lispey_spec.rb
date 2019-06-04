@@ -15,7 +15,6 @@ module Feeble::Evaler
     context "interop" do
       describe "::" do
         it "translates 'square' invokation into host invokation" do
-          pending
           # ::print(1)
 
           host_invokation = List.create(
@@ -27,14 +26,6 @@ module Feeble::Evaler
           expect {
             expect(evaler.eval(host_invokation)).to eq nil
           }.to output("1").to_stdout
-
-          # expect(evaler.eval(host_invokation)).to eq List.create(
-          #   Symbol.new("%host"),
-          #   Symbol.new("."),
-          #   Symbol.new("Kernel"),
-          #   Symbol.new("print"),
-          #   1
-          # )
         end
       end
 
