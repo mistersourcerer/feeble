@@ -17,6 +17,10 @@ module Feeble::Language
         path = env.invoke(Symbol.new(:path)).dup
         transform_path_into_dot_invokation path
       }
+
+      add_arity(Symbol.new(:reader), Symbol.new(:evaler)) { |env|
+        read env.invoke(Symbol.new(:reader)), env.invoke(Symbol.new(:evaler))
+      }
     end
 
     private
@@ -41,6 +45,56 @@ module Feeble::Language
 
     def method_name_from(path)
       Symbol.new(path.last.id.to_s.gsub("()", ""))
+    end
+
+    def read(reader, _)
+      component = ""
+      components = []
+
+      while reader.next
+        if reader.current == "("
+          components << Symbol.new(component)
+          component = ""
+          components += read_parameters(reader)
+          break if reader.eof?
+        end
+
+        if reader.current == "\s"
+          components << Symbol.new(component)
+          reader.next # consume separator
+          break
+        end
+
+        if reader.current == "."
+          components << component
+          component = ""
+          components << Symbol.new(".")
+          reader.next
+        else
+          component << reader.current
+        end
+      end
+
+      invoke components
+    end
+
+    def read_parameters(reader)
+      finished = false
+      params_string = ""
+
+      while reader.next
+        if reader.current == ")"
+          finished = true
+          reader.next
+          break
+        end
+
+        params_string << reader.current
+      end
+
+      raise "Expected to find a ), but nothing was found" unless finished
+
+      Feeble::Reader::Code.new.read params_string
     end
   end
 end
