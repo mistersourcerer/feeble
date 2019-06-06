@@ -48,28 +48,22 @@ module Feeble::Language
     end
 
     def read(reader, _)
+      component_reader = Feeble::Reader::Code.new
       component = ""
       components = []
 
       while reader.next
         if reader.current == "("
-          components << Symbol.new(component)
+          components << component_reader.read(component).last
           component = ""
           components += read_parameters(reader)
           break if reader.eof?
         end
 
-        if reader.current == "\s"
-          components << Symbol.new(component)
-          reader.next # consume separator
-          break
-        end
-
         if reader.current == "."
-          components << component
-          component = ""
+          components << component_reader.read(component).last
           components << Symbol.new(".")
-          reader.next
+          component = reader.next
         else
           component << reader.current
         end

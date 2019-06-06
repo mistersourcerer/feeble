@@ -19,6 +19,18 @@ module Feeble::Reader
         end
       end
 
+      context "Strings" do
+        it "recognizes strings" do
+          expect(reader.read("\"lol\"")).to eq ["lol"]
+        end
+      end
+
+      context "Symbols" do
+        it "recognizes symbols" do
+          expect(reader.read("omg")).to eq [Symbol.new("omg")]
+        end
+      end
+
       context "Interop with square function" do
         it "reads :: expressions as a direct Ruby (host) code invocation" do
           code = "::puts(1)"
@@ -35,7 +47,6 @@ module Feeble::Reader
         end
 
         it "Translate" do
-          pending
           code = '::"omg".upcase()'
 
           expect(reader.read(code)).to eq [
