@@ -14,18 +14,8 @@ module Feeble::Reader
       values = []
 
       while reader.next
-        if DIGITS.match(reader.current)
-          values << read_number(reader)
-          next
-        end
-
-        if STRING_DELIMITER.match(reader.current)
-          values << read_string(reader)
-          next
-        end
-
-        if SEPARATOR.match(reader.current)
-          values << read_symbol(reader)
+        if value = consume_value(reader)
+          values << value
           next
         end
 
@@ -37,38 +27,39 @@ module Feeble::Reader
         end
       end
 
-      values << Symbol.new(component) if component.length > 0
-
-      values
+      if component.length > 0
+        values << Symbol.new(component)
+      else
+        values
+      end
     end
 
     private
+
+    def consume_value(reader)
+      return read_number(reader) if DIGITS.match(reader.current)
+      return read_string(reader) if STRING_DELIMITER.match(reader.current)
+      return read_symbol(reader) if SEPARATOR.match(reader.current)
+    end
 
     def build_invokation(fn, reader, evaler)
       if fn.is?(:special) && fn.is?(:operator)
         fn.invoke(reader, evaler)
       else
-        # build normal function invokation (if it is invokation)
+        #TODO: build normal function invokation (if it is invokation)
       end
     end
 
     def read_number(reader)
-      number = reader.current
-      while DIGITS.match reader.next
-        number << reader.current
+      number = read_until(reader) { DIGITS.match(reader.current) == nil }
+
+      is_float = reader.current == "."
+      if is_float
+        number << read_until(reader) { DIGITS.match(reader.current) == nil }
+        Float(number)
+      else
+        Integer(number)
       end
-
-      if reader.current == "."
-        number << "."
-
-        while DIGITS.match reader.next
-          number << reader.current
-        end
-
-        return Float(number)
-      end
-
-      Integer(number)
     end
 
     def read_string(reader)
@@ -77,37 +68,41 @@ module Feeble::Reader
         return ""
       end
 
-      finished = false
-      string = reader.current
-
-      while reader.next
-        if STRING_DELIMITER.match reader.current
-          finished = true
-          reader.next
-          break
-        end
-
-        string << reader.current
-      end
-
-      raise "Expected a \" but none was found." unless finished
-
-      string
+      read_until(
+        reader,
+        condition: -> { STRING_DELIMITER.match reader.current },
+        fail_with: -> { raise "Expected a \" but none was found." })
     end
 
     def read_symbol(reader)
-      id = reader.current
+      id = read_until(reader) { SEPARATOR.match reader.current }
+      Symbol.new id
+    end
+
+    def read_until(reader, cond = nil, condition: nil, fail_with: nil, &block)
+      finished = false
+      break_when = condition || cond || block
+
+      acc = accumulate_until(reader, reader.current) {
+        break_when.call ? finished = true : false
+      }
+
+      should_fail = fail_with && !finished
+      should_fail ? fail_with.call : acc
+    end
+
+    def accumulate_until(reader, acc_start)
+      acc = acc_start
 
       while reader.next
-        if SEPARATOR.match reader.current
-          reader.next # consume separator
+        if yield
           break
+        else
+          acc << reader.current
         end
-
-        id << reader.current
       end
 
-      Symbol.new id
+      acc
     end
   end
 end
