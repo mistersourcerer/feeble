@@ -11,6 +11,7 @@ module Feeble::Language
 
     def initialize
       put Symbol.new(:special)
+      put Symbol.new(:operator)
 
       add_arity(Symbol.new(:path)) { |env|
         path = env.invoke(Symbol.new(:path)).dup
