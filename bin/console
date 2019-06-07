@@ -11,4 +11,8 @@ require "feeble"
 # Pry.start
 
 require "irb"
+include Feeble
+include Feeble::Reader
+include Feeble::Evaler
+
 IRB.start(__FILE__)

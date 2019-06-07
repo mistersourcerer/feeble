@@ -10,6 +10,15 @@ module Feeble::Evaler
 
         expect(evaler.eval(sum)).to eq 3
       end
+
+      it "accepts a collection of lists" do
+        stuff = [
+          List.create(Symbol.new("+"), 0, 0),
+          List.create(Symbol.new("+"), 1, 2),
+        ]
+
+        expect(evaler.eval(stuff)).to eq 3
+      end
     end
 
     context "interop" do

@@ -5,6 +5,10 @@ module Feeble::Evaler
     end
 
     def eval(form, env: Feeble::Language::Fbl.new)
+      if form.is_a? Array
+        return form.reduce(nil) { |_, form| self.eval(form, env: env) }
+      end
+
       case
       when env_lookup?(env, form)
         do_lookup(env, form)
