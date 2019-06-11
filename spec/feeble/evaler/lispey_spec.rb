@@ -35,7 +35,7 @@ module Feeble::Evaler
           host_invokation = List.create(
             Symbol.new("::"),
             Symbol.new("print"),
-            1
+            List.create("%arr", 1)
           )
 
           expect {
@@ -52,7 +52,7 @@ module Feeble::Evaler
           Symbol.new("."),
           Symbol.new("Kernel"),
           Symbol.new("print"),
-          1)
+          List.create("%arr", 1))
 
         # should return nil and print to stdout
         expect {
