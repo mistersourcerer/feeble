@@ -62,7 +62,7 @@ module Feeble::Runtime
     def check_name_type(name)
       return if @verify.symbol?(name)
 
-      raise "Only Symbols can be associated with values, not #{name}"
+      raise "Only Symbols can be associated with values, not <#{name}>"
     end
 
     def register_function(name, value)

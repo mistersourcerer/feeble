@@ -11,8 +11,11 @@ module Feeble::Language
     def initialize(*_)
       super
 
-      register Symbol.new("::"), Interop.new
       register HOST, HostEnv.new
+      register Symbol.new("::"), Interop.new
+      register Symbol.new("eval"), Evaler.new
+      register Symbol.new("%arr"), Arr.new
+      # register Symbol.new("read", Reader.new)
       register Symbol.new("+"), Math::Plus.new
     end
 

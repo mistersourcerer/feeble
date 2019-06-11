@@ -5,17 +5,16 @@ module Feeble::Evaler
     end
 
     def eval(form, env: Feeble::Language::Fbl.new)
-      if form.is_a? Array
-        return form.reduce(nil) { |_, form| self.eval(form, env: env) }
-      end
-
       case
       when env_lookup?(env, form)
         do_lookup(env, form)
       when fn_invokation?(env, form)
         do_invoke(env, form)
       else
-        raise "Unrecognized form #{form}"
+        # TODO: check if it is a "returnable" form
+        # (Int, Float, String, Array)
+        form 
+        #raise "Unrecognized form #{form}"
       end
     end
 

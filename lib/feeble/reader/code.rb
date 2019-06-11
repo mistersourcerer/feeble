@@ -7,6 +7,7 @@ module Feeble::Reader
     DIGITS = /\A[0-9_]/
     STRING_DELIMITER = /\A"/
     SEPARATOR = /\A[\s,]/
+    ARRAY = /\A\[/
 
     def read(code, env: Fbl.new, evaler: Lispey.new)
       reader = Char.new code
@@ -14,7 +15,7 @@ module Feeble::Reader
       values = []
 
       while reader.next
-        if value = consume_value(reader)
+        if value = consume_value(reader, env)
           values << value
           next
         end
@@ -27,19 +28,22 @@ module Feeble::Reader
         end
       end
 
-      if component.length > 0
-        values << Symbol.new(component)
+      values << Symbol.new(component) if component.length > 0
+
+      if values.length > 1
+        List.create(Symbol.new("eval"), *values)
       else
-        values
+        values.first
       end
     end
 
     private
 
-    def consume_value(reader)
+    def consume_value(reader, env)
       return read_number(reader) if DIGITS.match(reader.current)
       return read_string(reader) if STRING_DELIMITER.match(reader.current)
       return read_symbol(reader) if SEPARATOR.match(reader.current)
+      return read_array(reader, env) if ARRAY.match(reader.current)
     end
 
     def build_invokation(fn, reader, evaler)
@@ -77,6 +81,31 @@ module Feeble::Reader
     def read_symbol(reader)
       id = read_until(reader) { SEPARATOR.match reader.current }
       Symbol.new id
+    end
+
+    def read_array(reader, env)
+      return List.create(Symbol.new("%arr")) if reader.next == "]"
+
+      internal_reader = self.class.new
+      complete = false
+      params = []
+
+      until reader.eof?
+        component = read_until(reader) {
+          SEPARATOR.match(reader.current) || reader.current == "]"
+        }
+
+        params << internal_reader.read(component, env: env)
+
+        if reader.current == "]"
+          complete = true
+          break
+        end
+      end
+
+      raise "Expected to find a ], but nothing =(" unless complete
+
+      List.create Symbol.new("%arr"), *params
     end
 
     def read_until(reader, cond = nil, condition: nil, fail_with: nil, &block)

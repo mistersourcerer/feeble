@@ -26,6 +26,10 @@ module Feeble::Runtime
       def count
         0
       end
+
+      def to_a
+        []
+      end
     end
 
     EMPTY = EmptyList.new

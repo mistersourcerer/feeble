@@ -11,7 +11,7 @@ module Feeble::Language
     describe "invoke(List)" do
       it "transforms the param list on a Fbl::HOST invokation" do
         host_invokation = interop.invoke([
-          "omg", Symbol.new("."), Symbol.new("upcase()")])
+          "omg", Symbol.new("."), Symbol.new("upcase")])
 
         expect(host_invokation).to eq List.create(
           Fbl::HOST, Symbol.new("."), "omg", Symbol.new("upcase"))

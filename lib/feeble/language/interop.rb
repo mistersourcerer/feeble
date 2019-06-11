@@ -14,8 +14,15 @@ module Feeble::Language
       put Symbol.new(:operator)
 
       add_arity(Symbol.new(:path)) { |env|
-        path = env.invoke(Symbol.new(:path)).dup
-        transform_path_into_dot_invokation path
+        path = env.invoke(Symbol.new(:path))
+        target =
+          if dot_invokation? path
+            path.first.tap { path = path[2..] }
+          else
+            Symbol.new("Kernel")
+          end
+
+        List.create Fbl::HOST, Symbol.new("."), target, *path
       }
 
       add_arity(Symbol.new(:reader), Symbol.new(:evaler)) { |env|
@@ -25,26 +32,12 @@ module Feeble::Language
 
     private
 
-    def transform_path_into_dot_invokation(path)
-      target, invokation_path = target_and_path_from path
-
-      List.create(Fbl::HOST, Symbol.new("."), target, *invokation_path)
-    end
-
-    def target_and_path_from(path)
-      if dot_invokation? path
-        [path.shift, method_name_from(path)]
-      else
-        [Symbol.new("Kernel"), path]
-      end
-    end
-
     def dot_invokation?(path)
-      [Symbol.new(".")] == path[1..1]
+      Symbol.new(".") == path[1..1].first
     end
 
     def method_name_from(path)
-      Symbol.new(path.last.id.to_s.gsub("()", ""))
+      Symbol.new(path.to_a.last.id.to_s.gsub("()", ""))
     end
 
     def read(reader, _)
@@ -54,14 +47,16 @@ module Feeble::Language
 
       while reader.next
         if reader.current == "("
-          components << component_reader.read(component).last
+          components << component_reader.read(component)
           component = ""
-          components += read_parameters(reader)
+          if params = read_parameters(reader)
+            components << params
+          end
           break if reader.eof?
         end
 
         if reader.current == "."
-          components << component_reader.read(component).last
+          components << component_reader.read(component)
           components << Symbol.new(".")
           component = reader.next
         else
@@ -88,7 +83,16 @@ module Feeble::Language
 
       raise "Expected to find a ), but nothing was found" unless finished
 
-      Feeble::Reader::Code.new.read params_string
+      if params_string.length == 0
+        nil
+      else
+        # Parameters will always be an Array(ish).
+        # So we should force this to be evaluated as a list.
+        # Is almost like fn(a b) was a sugar syntax for
+        # fn.invoke [ List.create("eval", "a"), List.create("eval", "b") ]
+        col_params_string = "[" + params_string + "]"
+        Feeble::Reader::Code.new.read col_params_string
+      end
     end
   end
 end
