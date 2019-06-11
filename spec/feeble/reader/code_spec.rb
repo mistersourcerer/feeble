@@ -39,6 +39,14 @@ module Feeble::Reader
         it "recognizes array declarations" do
           expect(reader.read("[1]")).to eq List.create(Symbol.new("%arr"), 1)
         end
+
+        it "recognizes multiple values comma separated" do
+          expect(reader.read("[1, 2, 3, 4]")).to eq List.create(Symbol.new("%arr"), 1, 2, 3, 4)
+        end
+
+        it "recognizes multiple values space separated" do
+          expect(reader.read("[1 2 3 4]")).to eq List.create(Symbol.new("%arr"), 1, 2, 3, 4)
+        end
       end
 
       context "Interop with square function" do

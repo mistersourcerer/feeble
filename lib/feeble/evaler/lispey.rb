@@ -13,7 +13,7 @@ module Feeble::Evaler
       else
         # TODO: check if it is a "returnable" form
         # (Int, Float, String, Array)
-        form 
+        form
         #raise "Unrecognized form #{form}"
       end
     end
