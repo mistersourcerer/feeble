@@ -4,6 +4,14 @@ module Feeble::Evaler
   RSpec.describe Lispey do
     subject(:evaler) { described_class.new }
 
+    class ZeroParam
+      include Feeble::Runtime::Invokable
+
+      def initialize
+        add_arity { "yup" }
+      end
+    end
+
     describe "#eval" do
       it "interprets a list as an invocation" do
         sum = List.create Symbol.new("+"), 1, 2
@@ -11,13 +19,11 @@ module Feeble::Evaler
         expect(evaler.eval(sum)).to eq 3
       end
 
-      it "accepts a collection of lists" do
-        stuff = [
-          List.create(Symbol.new("+"), 0, 0),
-          List.create(Symbol.new("+"), 1, 2),
-        ]
-
-        expect(evaler.eval(stuff)).to eq 3
+      it "knows to invoke fn without parameters" do
+        env = Env.new
+        env.register Symbol.new("zero"), ZeroParam.new
+        invokation = List.create Symbol.new("zero")
+        expect(evaler.eval(invokation, env: env)).to eq "yup"
       end
     end
 

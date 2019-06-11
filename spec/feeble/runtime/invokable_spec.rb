@@ -23,6 +23,12 @@ module Feeble::Runtime
           expect { fn.add_arity(1) }
             .to raise_error(Invokable::InvalidParamName)
         end
+
+        it "handles 0 arity" do
+          fn.add_arity { "no-params!" }
+
+          expect(fn.invoke).to eq "no-params!"
+        end
       end
 
       describe "#var_args" do
