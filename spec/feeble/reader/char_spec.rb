@@ -74,5 +74,22 @@ module Feeble::Reader
         expect(reader.peek).to eq "m"
       end
     end
+
+    describe "#until_next" do
+      subject(:reader) { described_class.new('"omg lol bbq"nice') }
+
+      before { reader.next }
+
+      it "consumes the IO until find the parameter char" do
+        expect(reader.until_next('"')).to eq "omg lol bbq"
+        expect(reader.current).to eq '"'
+      end
+
+      it "raise if char is not found" do
+        expect {
+          reader.until_next ")"
+        }.to raise_error "Expected ) but none was found"
+      end
+    end
   end
 end

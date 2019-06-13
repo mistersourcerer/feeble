@@ -58,7 +58,7 @@ module Feeble::Reader
             Symbol.new("."),
             Symbol.new("Kernel"),
             Symbol.new("puts"),
-            List.create(Symbol.new("%arr"), 1)
+            1
           )
         end
 

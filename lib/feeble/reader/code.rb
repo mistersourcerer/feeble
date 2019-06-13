@@ -9,12 +9,19 @@ module Feeble::Reader
     SEPARATOR = /\A[\s,]/
     ARRAY = /\A\[/
 
-    def read(code, env: Fbl.new, evaler: Lispey.new)
+    def read(code, env: Fbl.new, evaler: Lispey.new, fn_wrapper: nil)
       reader = Char.new code
       component = ""
       values = []
 
       while reader.next
+        # ignore separators
+        if SEPARATOR.match(reader.current)
+          while SEPARATOR.match(reader.next) && !reader.eof?
+            reader.next
+          end
+        end
+
         if value = consume_value(reader, env)
           values << value
           next
@@ -29,6 +36,10 @@ module Feeble::Reader
       end
 
       values << Symbol.new(component) if component.length > 0
+
+      if !fn_wrapper.nil?
+        return List.create(Symbol.new(fn_wrapper), *values)
+      end
 
       if values.length > 1
         List.create(Symbol.new("eval"), *values)
@@ -84,28 +95,32 @@ module Feeble::Reader
     end
 
     def read_array(reader, env)
-      return List.create(Symbol.new("%arr")) if reader.next == "]"
+      array_elements_string = reader.until_next "]"
+      return List.create(Symbol.new("%arr")) if array_elements_string.nil?
 
-      internal_reader = self.class.new
-      complete = false
-      params = []
+      read(array_elements_string, env: env, fn_wrapper: "%arr")
 
-      until reader.eof?
-        component = read_until(reader) {
-          SEPARATOR.match(reader.current) || reader.current == "]"
-        }
 
-        params << internal_reader.read(component, env: env)
+      # internal_reader = self.class.new
+      # complete = false
+      # params = []
 
-        if reader.current == "]"
-          complete = true
-          break
-        end
-      end
+      # until reader.eof?
+      #   component = read_until(reader) {
+      #     SEPARATOR.match(reader.current) || reader.current == "]"
+      #   }
 
-      raise "Expected to find a ], but nothing =(" unless complete
+      #   params << internal_reader.read(component, env: env)
 
-      List.create Symbol.new("%arr"), *params
+      #   if reader.current == "]"
+      #     complete = true
+      #     break
+      #   end
+      # end
+
+      # raise "Expected to find a ], but nothing =(" unless complete
+
+      # List.create Symbol.new("%arr"), *params
     end
 
     def read_until(reader, cond = nil, condition: nil, fail_with: nil, &block)

@@ -5,16 +5,22 @@ module Feeble::Evaler
     end
 
     def eval(form, env: Feeble::Language::Fbl.new)
-      case
-      when env_lookup?(env, form)
-        do_lookup(env, form)
-      when fn_invokation?(env, form)
-        do_invoke(env, form)
+      if @verify.list? form
+        if env_lookup?(env, form)
+          do_lookup(env, form)
+        else
+          raise "Unknown form #{form}" if !fn_invokation?(env, form)
+          do_invoke(env, form)
+        end
       else
-        # TODO: check if it is a "returnable" form
-        # (Int, Float, String, Array)
-        form
-        #raise "Unrecognized form #{form}"
+        if @verify.symbol? form
+          env.invoke form
+        else
+          # TODO: check if it is a "returnable" form
+          # (Int, Float, String, Array)
+          form
+          #raise "Unrecognized form #{form}"
+        end
       end
     end
 

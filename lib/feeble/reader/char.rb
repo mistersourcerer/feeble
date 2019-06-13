@@ -35,5 +35,25 @@ module Feeble::Reader
     def eof?
       @peek == nil && @io.eof?
     end
+
+    def until_next(char)
+      raise "Expected #{char} but none was found" if self.next == nil
+      return "" if current == char
+
+      found = false
+      acc = current
+      until(eof?)
+        if self.next == char
+          found = true
+          break
+        end
+
+        acc << current
+      end
+
+      raise "Expected #{char} but none was found" if !found
+
+      acc
+    end
   end
 end

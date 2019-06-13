@@ -13,11 +13,11 @@ module Feeble::Runtime
       self.var_args = InvokationShape.new Array(param_name), procedure
     end
 
-    def invoke(*params, scope: nil)
+    def invoke(*params, scope: nil, evaler: Feeble::Evaler::Lispey.new)
       current_invokation = current_invokation_from(params)
       env = bind_args(current_invokation, params).wrap(scope)
 
-      current_invokation.call env
+      current_invokation.call env, evaler
     end
 
     def put(property, value = true)
@@ -88,8 +88,8 @@ module Feeble::Runtime
       @procedure = procedure
     end
 
-    def call(env)
-      @procedure.call env
+    def call(env, evaler)
+      @procedure.call env, evaler
     end
 
     def register(env, args)

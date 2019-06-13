@@ -5,7 +5,7 @@ module Feeble::Language
 
     def initialize
       add_var_args(Symbol.new(:elements)) do |env|
-        env.invoke(Symbol.new(:elements))
+        Array(env.invoke(Symbol.new(:elements)))
       end
 
       add_arity { [] }

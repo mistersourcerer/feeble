@@ -4,7 +4,7 @@ module Feeble::Language::Host
     include Feeble::Runtime::Invokable
 
     def initialize
-      add_var_args(Symbol.new(:path)) { |env|
+      add_var_args(Symbol.new(:path)) { |env, evaler|
         target, method, params = invokation_from env.invoke(Symbol.new(:path))
         raise "#{target} is not defined by %host." unless defined? target
 
