@@ -14,9 +14,10 @@ module Feeble::Language
       register HOST, HostEnv.new
       register Symbol.new("::"), Interop.new
       register Symbol.new("eval"), Evaler.new
+      register Symbol.new("%_ping"), Pong.new
       register Symbol.new("%arr"), Arr.new
       # register Symbol.new("read", Reader.new)
-      register Symbol.new("+"), Math::Plus.new
+      # register Symbol.new("+"), Math::Plus.new
     end
 
     def eval(code, reader: Code.new, evaler: Lispey.new)

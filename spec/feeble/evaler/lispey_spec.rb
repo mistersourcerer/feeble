@@ -4,26 +4,35 @@ module Feeble::Evaler
   RSpec.describe Lispey do
     subject(:evaler) { described_class.new }
 
-    class ZeroParam
-      include Feeble::Runtime::Invokable
-
-      def initialize
-        add_arity { "yup" }
-      end
-    end
-
     describe "#eval" do
-      it "interprets a list as an invocation" do
-        sum = List.create Symbol.new("+"), 1, 2
+      context "Lists" do
+        class ZeroParam
+          include Feeble::Runtime::Invokable
 
-        expect(evaler.eval(sum)).to eq 3
-      end
+          def initialize
+            add_arity { "yup" }
+          end
+        end
 
-      it "knows to invoke fn without parameters" do
-        env = Env.new
-        env.register Symbol.new("zero"), ZeroParam.new
-        invokation = List.create Symbol.new("zero")
-        expect(evaler.eval(invokation, env: env)).to eq "yup"
+        it "knows to invoke fn without parameters" do
+          env = Env.new
+          env.register Symbol.new("zero"), ZeroParam.new
+          invokation = List.create Symbol.new("zero")
+
+          expect(evaler.eval(invokation, env: env)).to eq "yup"
+        end
+
+        it "interprets a list as an invocation" do
+          ping = List.create Symbol.new("%_ping"), "world"
+
+          expect(evaler.eval(ping)).to eq "pong with: world"
+        end
+
+        it "raise runtime error if form is not sym, primitive, fun or lookup" do
+          expect {
+            evaler.eval(List.create("nothing"))
+          }.to raise_error "Can't invoke <nothing>, nor recognize it as a form"
+        end
       end
     end
 

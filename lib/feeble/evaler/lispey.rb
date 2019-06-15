@@ -6,45 +6,53 @@ module Feeble::Evaler
 
     def eval(form, env: Feeble::Language::Fbl.new)
       if @verify.list? form
-        if env_lookup?(env, form)
-          do_lookup(env, form)
-        else
-          raise "Unknown form #{form}" if !fn_invokation?(env, form)
-          do_invoke(env, form)
-        end
+        eval_list env, form
       else
-        if @verify.symbol? form
-          env.invoke form
-        else
-          # TODO: check if it is a "returnable" form
-          # (Int, Float, String, Array)
-          form
-          #raise "Unrecognized form #{form}"
-        end
+        eval_form env, form
       end
     end
 
     private
 
-    def env_lookup?(env, form)
-      new_env = env.invoke form.first
-      @verify.env?(new_env) && form.rest.count > 0
+    def eval_list(env, list)
+      if env_lookup?(env, list)
+        lookup(env, list)
+      else
+        invoke(env, list)
+      end
     end
 
-    def do_lookup(env, form)
-      new_env = env.invoke(form.first).wrap(env)
-      new_form = form.rest
+    def eval_form(env, form)
+      if @verify.symbol? form
+        env.invoke form
+      else
+        # TODO: check if it is a "returnable" form
+        # (Int, Float, String, Array)
+        form
+        #raise "Unrecognized form #{form}"
+      end
+    end
+
+    def env_lookup?(env, list)
+      new_env = env.invoke list.first
+
+      @verify.env?(new_env) && list.rest.count > 0
+    end
+
+    def lookup(env, list)
+      new_env = env.invoke(list.first).wrap(env)
+      new_form = list.rest
 
       self.eval new_form, env: new_env
     end
 
-    def fn_invokation?(env, form)
-      @verify.fn? env.invoke(form.first)
-    end
+    def invoke(env, list)
+      fn = env.invoke(list.first)
+      if !@verify.fn?(fn)
+        raise "Can't invoke <#{list.first}>, nor recognize it as a form"
+      end
 
-    def do_invoke(env, form)
-      fn = env.invoke(form.first)
-      result = invoke_fn fn, form.rest.to_a, env
+      result = invoke_fn fn, list.rest.to_a, env
 
       @verify.list?(result) ? self.eval(result, env: env) : result
     end
