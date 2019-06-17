@@ -23,7 +23,7 @@ module Feeble::Runtime
     end
 
     describe "#list?" do
-      it "returns true only for Envs" do
+      it "returns true only for Lists" do
         expect(verify.list?(List::EmptyList.new)).to eq true
         expect(verify.list?(List.new(1))).to eq true
         expect(verify.list?(:omg)).to eq false

@@ -105,7 +105,7 @@ module Feeble::Reader
       it "raises if char is not found" do
         expect {
           reader.until_next ")"
-        }.to raise_error "Expected ) but none was found"
+        }.to raise_error "Expected ) but nothing was found"
       end
 
       it "accepts a condition to 'stop'" do

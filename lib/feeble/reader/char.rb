@@ -49,12 +49,20 @@ module Feeble::Reader
       @peek == nil && @io.eof?
     end
 
-    def until_next(char, &condition)
-      condition ||= ->(current_char, acc) { current_char == char }
-      read_until("Expected #{char} but none was found", &condition)
+    def until_next(pattern, &condition)
+      condition ||=
+        if pattern.is_a?(Regexp)
+          ->(current_char, _) { pattern.match? current_char }
+        else
+          ->(current_char, _) { pattern == current_char }
+        end
+
+      read_until("Expected #{pattern} but nothing was found", &condition)
     end
 
     def read_until(raise_not_found = nil, &condition)
+      condition ||= ->(_, _) { false }
+
       if condition.call(self.current, nil)
         @logger.debug "condition was immediately verified"
         @logger.debug "  looking to #{self.current}"
@@ -91,6 +99,10 @@ module Feeble::Reader
         @logger.debug "iterating, accumulator is: #{string}"
       end
 
+      @logger.debug "Out of loop"
+      @logger.debug "  looking to #{self.current}"
+      @logger.debug "  accumulator is: #{string}"
+      @logger.debug "  found? < #{found} > AND raise: < #{raise_not_found} >"
       raise raise_not_found if !found && !raise_not_found.nil?
 
       string

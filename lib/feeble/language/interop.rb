@@ -56,23 +56,22 @@ module Feeble::Language
       components = []
 
       while reader.next
-        if reader.current == "("
-          reader.next
+        if fn_invokation?(reader)
           components << component_reader.read(component)
           component = ""
-          if params = read_parameters(reader)
-            components << params
-          end
+
+          components << array_with_params(reader)
+
           break if reader.eof?
           next
         end
 
-        if RUBY_STRING_DELIMITER.match reader.current
+        if string?(reader)
           reader.next # consume "
-          components << reader.read_until("Syntax Error: String not properly closed") { |char|
-            RUBY_STRING_DELIMITER.match char
-          }
+          components << reader.until_next(RUBY_STRING_DELIMITER)
+
           component = ""
+
           break if reader.eof?
           next
         end
@@ -89,8 +88,18 @@ module Feeble::Language
       invoke components
     end
 
-    def read_parameters(reader)
-      params_string = reader.until_next(")")
+    def fn_invokation?(reader)
+      reader.current == "("
+    end
+
+    def string?(reader)
+      RUBY_STRING_DELIMITER.match? reader.current
+    end
+
+    def array_with_params(reader)
+      reader.next
+      error_message = "Syntax Error: Expecting ) but none was found"
+      params_string = reader.read_until(error_message) { |char| char == ")" }
       col_params_string = "[" + params_string + "]"
       Feeble::Reader::Code.new.read col_params_string
     end
