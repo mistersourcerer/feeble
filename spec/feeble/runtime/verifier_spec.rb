@@ -38,5 +38,31 @@ module Feeble::Runtime
         expect(verify.fn?(nil)).to eq false
       end
     end
+
+    describe "#string?" do
+      it "returns true only for Strings" do
+        expect(verify.string?("yas!")).to eq true
+        expect(verify.string?(Fn.new)).to eq false
+        expect(verify.string?(List.new(1))).to eq false
+        expect(verify.string?(:omg)).to eq false
+        expect(verify.string?(nil)).to eq false
+      end
+    end
+
+    describe "#int?" do
+      it "returns true for Ints" do
+        expect(verify.int?(1)).to eq true
+        expect(verify.int?(1.2)).to eq false
+        expect(verify.int?("1")).to eq false
+      end
+    end
+
+    describe "#float?" do
+      it "returns true for Floats" do
+        expect(verify.float?(1.2)).to eq true
+        expect(verify.float?(1)).to eq false
+        expect(verify.float?("1")).to eq false
+      end
+    end
   end
 end
