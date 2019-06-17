@@ -5,23 +5,44 @@ module Feeble::Reader
     include Feeble::Evaler
 
     def read(code, env: Fbl.new, evaler: Lispey.new, fn_wrapper: nil)
-      reader = Char.new code
+      reader = Char.new code.strip
       component = ""
       values = []
 
       while reader.next
-        ignore_separators(reader)
+        # Went a whole string until a separator
+        # without match it with function or value.
+        # So it only can be a Symbol.
+        if SEPARATOR.match? reader.current
+          if component.length > 0
+            values << Symbol.new(component)
+            component = ""
+          end
+
+          ignore_separators(reader)
+        end
 
         if value = consume_value(reader, env)
           values << value
           next
         end
 
+        if LIST.match? reader.current
+          values << consume_list_invokation(reader, env)
+          component = ""
+          next
+        end
+
         component << reader.current
+
+        # Last check: is it a special form?
+        # If so, use it to interpret the code.
         fn = env.fn_lookup Symbol.new(component)
         if fn
           component = ""
-          values << build_invokation(fn, reader, evaler)
+          if fn.is?(:special)
+            values << fn.invoke(reader, evaler)
+          end
         end
       end
 
@@ -37,6 +58,9 @@ module Feeble::Reader
     SEPARATOR = /\A[\s,]/
     ARRAY = /\A\[/
     ARRAY_CLOSE = /\A\]/
+    LIST = /\A\(/
+    LIST_CLOSE = /\A\)/
+    INVOKATION_MARKER = Regexp.union SEPARATOR, LIST_CLOSE
 
     CONSUMERS = {
       DIGITS => :read_number,
@@ -46,10 +70,8 @@ module Feeble::Reader
     }
 
     def ignore_separators(reader)
-      if SEPARATOR.match?(reader.current)
-        while SEPARATOR.match?(reader.next) && !reader.eof?
-          reader.next
-        end
+      while SEPARATOR.match?(reader.current) && !reader.eof?
+        reader.next
       end
     end
 
@@ -68,11 +90,21 @@ module Feeble::Reader
       send(CONSUMERS[consumer], reader, env) if !consumer.nil?
     end
 
-    def build_invokation(fn, reader, evaler)
-      if fn.is?(:special) && fn.is?(:operator)
-        fn.invoke(reader, evaler)
+    def consume_list_invokation(reader, env)
+      reader.next
+
+      ignore_separators(reader)
+      fn = reader.until_next(INVOKATION_MARKER)
+      ignore_separators(reader)
+
+      without_params = LIST_CLOSE.match?(reader.current)
+      if without_params
+        List.create Symbol.new(fn)
       else
-        #TODO: build normal function invokation (if it is invokation)
+        params = reader.until_next(LIST_CLOSE)
+        read(params, env: env, fn_wrapper: fn)
+      end
+    end
       end
     end
 
@@ -109,6 +141,14 @@ module Feeble::Reader
       return List.create(Symbol.new("%arr")) if array_elements_string.nil?
 
       read(array_elements_string, env: env, fn_wrapper: "%arr")
+    end
+
+    def build_invokation(fn, reader, evaler)
+      if fn.is?(:special) && fn.is?(:operator)
+        fn.invoke(reader, evaler)
+      else
+        #TODO: build normal function invokation (if it is invokation)
+      end
     end
   end
 end

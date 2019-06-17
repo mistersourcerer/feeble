@@ -9,6 +9,31 @@ module Feeble::Reader
     end
 
     describe ".read" do
+      context "Interop with square function" do
+        it "reads :: expressions as a direct Ruby (host) code invocation" do
+          code = "::puts(1)"
+
+          expect(reader.read(code)).to eq List.create(
+            Symbol.new("%host"),
+            Symbol.new("."),
+            Symbol.new("Kernel"),
+            Symbol.new("puts"),
+            1
+          )
+        end
+
+        it "Translate" do
+          code = '::"omg".upcase()'
+
+          expect(reader.read(code)).to eq List.create(
+            Symbol.new("%host"),
+            Symbol.new("."),
+            "omg",
+            Symbol.new("upcase")
+          )
+        end
+      end
+
       context "Numbers" do
         it "recognizes integers" do
           expect(reader.read("123")).to eq 123
@@ -49,27 +74,26 @@ module Feeble::Reader
         end
       end
 
-      context "Interop with square function" do
-        it "reads :: expressions as a direct Ruby (host) code invocation" do
-          code = "::puts(1)"
-
-          expect(reader.read(code)).to eq List.create(
-            Symbol.new("%host"),
-            Symbol.new("."),
-            Symbol.new("Kernel"),
-            Symbol.new("puts"),
-            1
-          )
+      context "Lists" do
+        it "recognizes a list invokation" do
+          expect(reader.read("(%arr 1, 2, 3)")).to eq List.create(Symbol.new("%arr"), 1, 2, 3)
+          expect(reader.read("(   %arr 1, 2, 3)")).to eq List.create(Symbol.new("%arr"), 1, 2, 3)
+          expect(reader.read("(   %arr 1, 2, 3   )")).to eq List.create(Symbol.new("%arr"), 1, 2, 3)
         end
 
-        it "Translate" do
-          code = '::"omg".upcase()'
+        it "recognizes an invokation without parameters" do
+          expect(reader.read("(%arr)")).to eq List.create(Symbol.new("%arr"))
+          expect(reader.read("(%arr   )")).to eq List.create(Symbol.new("%arr"))
+          expect(reader.read("(   %arr   )")).to eq List.create(Symbol.new("%arr"))
+        end
 
-          expect(reader.read(code)).to eq List.create(
-            Symbol.new("%host"),
-            Symbol.new("."),
-            "omg",
-            Symbol.new("upcase")
+        it "recognizes the quoting of a list" do
+          expect(reader.read("'(this is a list)")).to eq List.create(
+            Symbol.new("%list"),
+            Symbol.new("this"),
+            Symbol.new("is"),
+            Symbol.new("a"),
+            Symbol.new("list"),
           )
         end
       end

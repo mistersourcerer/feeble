@@ -1,3 +1,6 @@
 #!/usr/bin/env ruby
+
+Bundler.setup if require "bundler"
+
 require "feeble"
 Feeble::Repl.new.run
