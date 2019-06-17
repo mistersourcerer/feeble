@@ -75,20 +75,44 @@ module Feeble::Reader
       end
     end
 
+    describe "#start" do
+      it "moves cursor to the first char" do
+        expect(reader.current).to eq nil
+
+        expect(reader.start).to eq "o"
+        expect(reader.current).to eq "o"
+      end
+
+      it "doesn't move the cursor if reading is already started" do
+        expect(reader.start).to eq "o"
+        expect(reader.start).to eq "o"
+        expect(reader.current).to eq "o"
+      end
+    end
+
     describe "#until_next" do
       subject(:reader) { described_class.new('"omg lol bbq"nice') }
 
-      before { reader.next }
+      before { reader.start }
 
       it "consumes the IO until find the parameter char" do
+        reader.next
+
         expect(reader.until_next('"')).to eq "omg lol bbq"
         expect(reader.current).to eq '"'
       end
 
-      it "raise if char is not found" do
+      it "raises if char is not found" do
         expect {
           reader.until_next ")"
         }.to raise_error "Expected ) but none was found"
+      end
+
+      it "accepts a condition to 'stop'" do
+        reader = described_class.new("omg lol:bbq")
+        string = reader.until_next("omg lol:bbq") { |char| char == ":" }
+
+        expect(string).to eq "omg lol"
       end
     end
   end

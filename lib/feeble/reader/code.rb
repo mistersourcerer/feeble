@@ -4,8 +4,9 @@ module Feeble::Reader
     include Feeble::Language
     include Feeble::Evaler
 
+
     DIGITS = /\A[0-9_]/
-    STRING_DELIMITER = /\A"/
+    STRING_DELIMITER = /\A\"/
     SEPARATOR = /\A[\s,]/
     ARRAY = /\A\[/
 
@@ -78,49 +79,24 @@ module Feeble::Reader
     end
 
     def read_string(reader)
-      if STRING_DELIMITER.match reader.next
-        reader.next # consume delimiter
-        return ""
-      end
-
-      read_until(
-        reader,
-        condition: -> { STRING_DELIMITER.match reader.current },
-        fail_with: -> { raise "Expected a \" but none was found." })
+      reader.next# consume "
+      reader.read_until("Syntax Error: expecting \" but none found.") { |char|
+        STRING_DELIMITER.match(char)
+      }
     end
 
     def read_symbol(reader)
+      # TODO: replace it with some sort of reader.until
       id = read_until(reader) { SEPARATOR.match reader.current }
       Symbol.new id
     end
 
     def read_array(reader, env)
+      reader.next # consume "["
       array_elements_string = reader.until_next "]"
       return List.create(Symbol.new("%arr")) if array_elements_string.nil?
 
       read(array_elements_string, env: env, fn_wrapper: "%arr")
-
-
-      # internal_reader = self.class.new
-      # complete = false
-      # params = []
-
-      # until reader.eof?
-      #   component = read_until(reader) {
-      #     SEPARATOR.match(reader.current) || reader.current == "]"
-      #   }
-
-      #   params << internal_reader.read(component, env: env)
-
-      #   if reader.current == "]"
-      #     complete = true
-      #     break
-      #   end
-      # end
-
-      # raise "Expected to find a ], but nothing =(" unless complete
-
-      # List.create Symbol.new("%arr"), *params
     end
 
     def read_until(reader, cond = nil, condition: nil, fail_with: nil, &block)

@@ -9,6 +9,8 @@ module Feeble::Language
     include Feeble::Runtime
     include Feeble::Runtime::Invokable
 
+    RUBY_STRING_DELIMITER = /\A[\"|\']/
+
     def initialize
       put Symbol.new(:special)
       put Symbol.new(:operator)
@@ -55,12 +57,24 @@ module Feeble::Language
 
       while reader.next
         if reader.current == "("
+          reader.next
           components << component_reader.read(component)
           component = ""
           if params = read_parameters(reader)
             components << params
           end
           break if reader.eof?
+          next
+        end
+
+        if RUBY_STRING_DELIMITER.match reader.current
+          reader.next # consume "
+          components << reader.read_until("Syntax Error: String not properly closed") { |char|
+            RUBY_STRING_DELIMITER.match char
+          }
+          component = ""
+          break if reader.eof?
+          next
         end
 
         if reader.current == "."
@@ -69,12 +83,6 @@ module Feeble::Language
           component = reader.next
         else
           component << reader.current
-        end
-
-        if reader.current == "\""
-          components << reader.until_next('"')
-          component = ""
-          break if reader.eof?
         end
       end
 
