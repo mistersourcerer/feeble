@@ -35,7 +35,7 @@ module Feeble::Runtime
       it "returns an empty list if just one element exists" do
         new_list = list.create 1
 
-        expect(new_list.rest).to eq list::EMPTY
+        expect(new_list.rest).to eq ListEmpty.instance
       end
     end
 
@@ -48,7 +48,7 @@ module Feeble::Runtime
       end
 
       it "returns a new_list with just one element when cons(ing) to Empty List" do
-        new_list = list::EMPTY.cons 1
+        new_list = ListEmpty.instance.cons 1
 
         expect(new_list).to eq list.new 1
         expect(new_list.count).to eq 1
@@ -64,7 +64,7 @@ module Feeble::Runtime
       end
 
       it "returns a new_list of one when conj(ing) empty new_list" do
-        new_list = list::EMPTY.conj 1
+        new_list = ListEmpty.instance.conj 1
 
         expect(new_list).to eq list.new 1
         expect(new_list.count).to eq 1
@@ -77,16 +77,6 @@ module Feeble::Runtime
 
         expect(new_list).to eq list.create 1, 2, 3, 4, 5
         expect(new_list.count).to eq 5
-      end
-    end
-
-    context "Ruby" do
-      describe "#to_enum" do
-        it "transforms the list into an Enumerator" do
-          new_list = list.create 1, 2, 3, 4, 5, 6, 7
-
-          expect(new_list.to_enum.to_a).to eq [1, 2, 3, 4, 5, 6, 7]
-        end
       end
     end
   end

@@ -6,15 +6,8 @@ module Feeble
     }
 
     def run
-      # parser = Reader::Parser.new
-      # env = Runtime.feeble.copy
-
       puts "Feeble (REPL) #{Feeble::VERSION}"
       puts "  /[COMMAND]  (/exit to getoutahier!)\n\n\n"
-
-      reader = Feeble::Reader::Code.new
-      evaler = Feeble::Evaler::Lispey.new
-      printer = Feeble::Printer::Expression.new
 
       while true
         begin
@@ -23,9 +16,10 @@ module Feeble
 
           break if execute(input) if COMMAND.match? input
 
-          data = reader.read input.chomp
-          result = evaler.eval data
-          puts " > #{printer.to_print(result)}"
+          # result = eval read(input)
+          # puts " > #{print result}"
+
+          puts " > #{nil}"
         rescue StandardError => e
           puts "  !error > #{e.message}"
           puts "  !error > inspect? [Y/n]"

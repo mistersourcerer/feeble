@@ -1,47 +1,13 @@
 module Feeble::Runtime
   class List
-    include Enumerable
-
-    class EmptyList
-      def first
-        List::EMPTY
-      end
-
-      def rest
-        List::EMPTY
-      end
-
-      def cons(obj)
-        List.create obj
-      end
-
-      def conj(obj)
-        cons obj
-      end
-
-      def apnd(obj)
-        cons obj
-      end
-
-      def count
-        0
-      end
-
-      def to_a
-        []
-      end
-    end
-
-    EMPTY = EmptyList.new
-
-    attr_reader :first, :rest, :count
+    include ListProperties
 
     def self.create(*args)
-      return EMPTY if args.length == 0
+      return ListEmpty.instance if args.length == 0
       new args[0], create(*args[1..args.length]), count: args.length
     end
 
-    def initialize(obj, rest = EMPTY, count: 1)
+    def initialize(obj, rest = ListEmpty.instance, count: 1)
       @count = count
       @first = obj
       @rest = rest
@@ -63,26 +29,9 @@ module Feeble::Runtime
       }
     end
 
-    def each(&block)
-      if block_given?
-        block.call first
-        rest.each(&block) if rest != EMPTY
-      else
-        to_enum(:each)
-      end
-    end
-
     def ==(other)
       return false if self.class != other.class
-      first == other.first && rest == other.rest
-    end
-
-    def eql?(other)
-      self == other
-    end
-
-    def hash
-      @first.hash + @second.hash + :fbl_list.hash
+      same? self, other
     end
   end
 end
