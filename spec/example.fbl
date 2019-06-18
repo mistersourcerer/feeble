@@ -27,9 +27,8 @@
 
 ;; Functions:
 
-+ = -> augend, addend { ;; name and parameters
-  {binop: true} ;; means it can be invoked as "lhs fn rhs" form
-
+;; binop means it can be invoked as "lhs fn rhs" form
++ = -> augend, addend { binop: true } {
   % augend + addend ;; delegates to the host:
                     ;; target == augend
                     ;; method == +
