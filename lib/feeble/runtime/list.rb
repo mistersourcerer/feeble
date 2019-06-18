@@ -4,6 +4,7 @@ module Feeble::Runtime
 
     def self.create(*args)
       return ListEmpty.instance if args.length == 0
+
       new args[0], create(*args[1..args.length]), count: args.length
     end
 

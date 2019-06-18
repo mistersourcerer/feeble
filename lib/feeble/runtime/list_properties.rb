@@ -1,11 +1,11 @@
 module Feeble::Runtime
   module ListProperties
     def first
-      @first || List::EMPTY
+      @first || ListEmpty.instance
     end
 
     def rest
-      @rest || List::EMPTY
+      @rest || ListEmpty.instance
     end
 
     def count
