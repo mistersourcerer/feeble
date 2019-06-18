@@ -37,6 +37,12 @@ module Feeble::Runtime
 
         expect(new_list.rest).to eq ListEmpty.instance
       end
+
+      it "if rest is one element, returns a list with one element" do
+        new_list = list.create 1, 2
+
+        expect(new_list.rest).to eq list.create 2
+      end
     end
 
     describe "#cons" do

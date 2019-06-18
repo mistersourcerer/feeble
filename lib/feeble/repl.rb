@@ -1,3 +1,5 @@
+require "pry-byebug"
+
 module Feeble
   class Repl
     COMMAND = /\A\//
@@ -9,17 +11,23 @@ module Feeble
       puts "Feeble (REPL) #{Feeble::VERSION}"
       puts "  /[COMMAND]  (/exit to getoutahier!)\n\n\n"
 
+      reader = Feeble::Reader::Code.new
+      evaler = Feeble::Evaler::Lispey.new
+
       while true
         begin
           print "feeble > "
-          input = gets
+
+          input = gets.chomp
 
           break if execute(input) if COMMAND.match? input
 
-          # result = eval read(input)
-          # puts " > #{print result}"
+          expressions = reader.read(input)
+          result = expressions.reduce(nil) { |res, expression|
+            res = evaler.eval expression
+          }
 
-          puts " > #{nil}"
+          puts " > #{result.inspect}"
         rescue StandardError => e
           puts "  !error > #{e.message}"
           puts "  !error > inspect? [Y/n]"

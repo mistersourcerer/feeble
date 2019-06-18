@@ -10,5 +10,13 @@ module Feeble::Runtime
         expect(verify.list?(nil)).to eq false
       end
     end
+
+    describe "#symbol?" do
+      it "returns true only for Symbols" do
+        expect(verify.symbol?(Symbol.new(:omg))).to eq true
+        expect(verify.symbol?(:omg)).to eq false
+        expect(verify.symbol?(nil)).to eq false
+      end
+    end
   end
 end
