@@ -4,11 +4,80 @@ module Feeble::Reader
   RSpec.describe Code do
     subject(:reader) { described_class.new }
 
-    context "quoting" do
+    context "Quoting" do
       it "reads ' syntax into a (quote ...) invokation" do
         expect(reader.read "'(a)").to eq [
           List.create(
             Symbol.new("quote"), List.create(Symbol.new("a")))
+        ]
+      end
+    end
+
+    context "Atoms" do
+      it "recognizes an atom in the wild" do
+        expect(reader.read "a:").to eq [
+          Atom.new("a:")
+        ]
+      end
+    end
+
+    context "Booleans" do
+      it "recognizes boolean values (as 'host' Boolean)" do
+        expect(reader.read(" true ")).to eq [true]
+        expect(reader.read(" false ")).to eq [false]
+      end
+    end
+
+    context "Maps" do
+      it "recognizes maps (as 'host' Hash)" do
+        expect(reader.read(" {a: true b: false} ")).to eq [
+          {
+            Atom.new("a:") => true,
+            Atom.new("b:") => false
+          }
+        ]
+
+        expect(reader.read(" {a: true, b: false} ")).to eq [
+          {
+            Atom.new("a:") => true,
+            Atom.new("b:") => false
+          }
+        ]
+      end
+    end
+
+    context "Function declaration" do
+      it "recognizes lambda without params" do
+        expect(reader.read "-> {}").to eq [
+          List.create(
+            Symbol.new("lambda"), [])
+        ]
+      end
+
+      it "recognizes lambda with some body" do
+        expect(reader.read "-> { yes: }").to eq [
+          List.create(
+            Symbol.new("lambda"), [Atom.new("yes:")])
+        ]
+      end
+
+      it "recognizes lambda with params" do
+        expect(reader.read "-> a, b {}").to eq [
+          List.create(
+            Symbol.new("lambda"),
+            [Symbol.new("a"), Symbol.new("b")],
+            []
+          )
+        ]
+      end
+
+      it "recognizes lambda with params and meta-data" do
+        expect(reader.read "-> a, b {special: false} { }").to eq [
+          List.create(
+            Symbol.new("lambda"),
+            [Symbol.new("a"), Symbol.new("b")],
+            [],
+            {Atom.new("special:") => false})
         ]
       end
     end
