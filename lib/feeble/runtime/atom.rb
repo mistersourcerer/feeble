@@ -20,5 +20,9 @@ module Feeble::Runtime
     def hash
       value.hash + :atom.hash
     end
+
+    def printable
+      @symbol.id
+    end
   end
 end

@@ -12,6 +12,7 @@ module Feeble::Runtime
       @count = count
       @first = obj
       @rest = rest
+      @fn = ListFunctions.new
     end
 
     def cons(obj)
@@ -37,6 +38,12 @@ module Feeble::Runtime
 
     def to_a
       [first] + rest.to_a
+    end
+
+    def printable(&printable_for)
+      and_more = count > 5 ? " ..." : ""
+      elements = Array(@fn.take(5, self))
+      "(#{elements.map{ |el| printable_for.call(el) }.join(" ")}#{and_more})"
     end
   end
 end

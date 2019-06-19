@@ -13,6 +13,7 @@ module Feeble
 
       reader = Feeble::Reader::Code.new
       evaler = Feeble::Evaler::Lispey.new
+      printer = Feeble::Printer::Expression.new
 
       while true
         begin
@@ -27,7 +28,8 @@ module Feeble
             res = evaler.eval expression
           }
 
-          puts " > #{result.inspect}"
+          printer.print result
+          $stdout.print "\n"
         rescue StandardError => e
           puts "  !error > #{e.message}"
           puts "  !error > inspect? [Y/n]"

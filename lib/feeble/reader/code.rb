@@ -131,17 +131,21 @@ module Feeble::Reader
     def read_quote(reader, env)
       reader.next
 
-      read_quoted_list(reader, env) if reader.current == "("
-    end
+      quoted_args =
+        if reader.current == "("
+          reader.next
+          List.create(read_list(reader, env))
+        else
+          expression_content = reader.until_next(SEPARATOR)
+          List.create(read(expression_content, env: env))
+        end
 
-    def read_quoted_list(reader, env)
-      reader.next
-
-      List.create(Symbol.new("quote"), read_list(reader, env))
+      quoted_args.cons Symbol.new("quote")
     end
 
     def read_list(reader, env)
       list_content = reader.until_next(")")
+      reader.next
 
       List.create(*read(list_content, env: env))
     end

@@ -7,6 +7,8 @@ module Feeble::Evaler
     def eval(form, env: Feeble::Language::Ruby::Fbl.new)
       if @verify.list? form
         eval_list form, env
+      else
+        eval_expression form, env
       end
     end
 
@@ -18,6 +20,10 @@ module Feeble::Evaler
       end
 
       raise "Can't invoke <#{list.first}>, not a function"
+    end
+
+    def eval_expression(expression, env)
+      expression
     end
   end
 end
