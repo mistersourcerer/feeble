@@ -59,6 +59,12 @@ module Feeble::Runtime
         expect(new_list).to eq list.new 1
         expect(new_list.count).to eq 1
       end
+
+      it "knows how to cons a list with a list" do
+        new_list = list.create(3, 4).cons list.create(1, 2)
+
+        expect(new_list).to eq list.create(list.create(1, 2), 3, 4)
+      end
     end
 
     describe "#conj" do
@@ -83,6 +89,12 @@ module Feeble::Runtime
 
         expect(new_list).to eq list.create 1, 2, 3, 4, 5
         expect(new_list.count).to eq 5
+      end
+    end
+
+    describe "#to_a" do
+      it "transforms a list into a (ruby) array" do
+        expect(list.create(1, 2, 3, 4).to_a).to eq [1, 2, 3, 4]
       end
     end
   end

@@ -34,5 +34,9 @@ module Feeble::Runtime
       return false if self.class != other.class
       same? self, other
     end
+
+    def to_a
+      [first] + rest.to_a
+    end
   end
 end

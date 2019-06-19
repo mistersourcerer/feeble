@@ -14,7 +14,7 @@ module Feeble::Evaler
 
     def eval_list(list, env)
       if fn = env.lookup(list.first) # && @verify.fn? fn
-        return fn.invoke list.rest
+        return fn.invoke(*Array(list.rest))
       end
 
       raise "Can't invoke <#{list.first}>, not a function"

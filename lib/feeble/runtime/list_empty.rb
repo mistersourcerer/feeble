@@ -20,5 +20,9 @@ module Feeble::Runtime
     def ==(other)
       other.is_a? self.class
     end
+
+    def to_a
+      []
+    end
   end
 end
