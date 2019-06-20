@@ -1,15 +1,17 @@
 module Feeble::Runtime
   module ListProperties
     def first
-      @first || ListEmpty.instance
+      @first
     end
 
     def rest
-      @rest || ListEmpty.instance
+      return ListEmpty.instance if @rest.nil?
+      @rest
     end
 
     def count
-      @count || 0
+      return 0 if @count.nil?
+      @count
     end
 
     def head

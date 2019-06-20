@@ -25,6 +25,20 @@ module Feeble::Runtime
       end
     end
 
+    describe "#first" do
+      it "returns the first item on the list" do
+        new_list = list.create(1, 2)
+
+        expect(new_list.first).to eq 1
+      end
+
+      it "returns the first even when it is false XD" do
+        new_list = list.create(false, true)
+
+        expect(new_list.first).to eq false
+      end
+    end
+
     describe "#rest" do
       it "returns a list with all but the first element" do
         new_list = list.create 1, 2, 3, 4
