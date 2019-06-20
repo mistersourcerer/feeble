@@ -14,7 +14,8 @@ module Feeble::Reader
       values = []
 
       while reader.next
-        if SEPARATOR.match?(reader.current) && component.length > 0
+        if SEPARATOR.match?(reader.current) &&
+            (component.length > 0 || (reader.prev == "{" || reader.prev == "("))
           ignore_separators(reader)
 
           if component.length > 0
@@ -97,27 +98,25 @@ module Feeble::Reader
 
       map_or_body =
         if reader.current == "{" # map or body
-          reader.next
-          reader.until_next "}"
+          read_list(reader, env).to_a
         else
           params_content = reader.until_next "{"
-          reader.next
           params = read(params_content, env: env)
-          reader.until_next "}"
+          read_list(reader, env).to_a
         end
       reader.next # consume }
       ignore_separators reader
 
       map, body =
         if reader.current == "{"
-          reader.next # consume {
-          body_content = reader.until_next("}")
-          reader.next # consume }
           ignore_separators(reader)
+          body = read_list(reader, env).to_a
+          ignore_separators(reader)
+          reader.next
 
-          [consume_map_content(map_or_body, env), read(body_content, env: env)]
+          [Hash[*map_or_body], body]
         else
-          [nil, read(map_or_body, env: env)]
+          [nil, map_or_body]
         end
 
       lambda_declaration = []
@@ -129,11 +128,7 @@ module Feeble::Reader
     end
 
     def read_map(reader, env)
-      reader.next # consume {
-      map_content = reader.until_next("}")
-      reader.next # consume }
-
-      consume_map_content(map_content, env)
+      Hash[*read(reader, env: env)].tap { reader.next }
     end
 
     def consume_map_content(map_content, env)
@@ -153,8 +148,7 @@ module Feeble::Reader
         if reader.current == "("
           List.create(read_list(reader, env))
         else
-          # TODO: WRONG, should be: until next SEPARATOR or eof?
-          expression_content = reader.until_next(SEPARATOR)
+          expression_content = reader.until_next(SEPARATOR, or_eof: true)
           read(expression_content, env: env)
         end
 
@@ -162,7 +156,7 @@ module Feeble::Reader
     end
 
     def read_list(reader, env)
-      list_content = read(reader, env: env)
+      list_content = read(reader, env: env) { ignore_separators(reader) }
       reader.next
 
       List.create(*list_content)

@@ -75,9 +75,9 @@ module Feeble::Reader
 
     context "Function declaration" do
       it "recognizes lambda without params" do
-        expect(reader.read "-> {}").to eq [
+        expect(reader.read "-> {a:}").to eq [
           List.create(
-            Symbol.new("lambda"), [])
+            Symbol.new("lambda"), [Atom.new("a:")])
         ]
       end
 
@@ -89,21 +89,21 @@ module Feeble::Reader
       end
 
       it "recognizes lambda with params" do
-        expect(reader.read "-> a, b {}").to eq [
+        expect(reader.read "-> a, b { true }").to eq [
           List.create(
             Symbol.new("lambda"),
             [Symbol.new("a"), Symbol.new("b")],
-            []
+            [true]
           )
         ]
       end
 
       it "recognizes lambda with params and meta-data" do
-        expect(reader.read "-> a, b {special: false} { }").to eq [
+        expect(reader.read "-> a, b {special: false} { true }").to eq [
           List.create(
             Symbol.new("lambda"),
             [Symbol.new("a"), Symbol.new("b")],
-            [],
+            [true],
             {Atom.new("special:") => false})
         ]
       end
