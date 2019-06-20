@@ -8,11 +8,15 @@ module Feeble::Runtime
       new args[0], create(*args[1..args.length]), count: args.length
     end
 
+    def self.fn
+      @fn ||= ListFunctions.new
+    end
+
     def initialize(obj, rest = ListEmpty.instance, count: 1)
       @count = count
       @first = obj
       @rest = rest
-      @fn = ListFunctions.new
+      @fn = self.class.fn
     end
 
     def cons(obj)

@@ -24,5 +24,9 @@ module Feeble::Runtime
     def to_a
       []
     end
+
+    def printable
+      "()"
+    end
   end
 end

@@ -8,7 +8,8 @@ module Feeble::Reader
       it "reads ' syntax into a (quote ...) invokation" do
         expect(reader.read "'(a)").to eq [
           List.create(
-            Symbol.new("quote"), List.create(Symbol.new("a")))
+            Symbol.new("quote"),
+            List.new(Symbol.new("a")))
         ]
       end
     end
@@ -47,6 +48,19 @@ module Feeble::Reader
     end
 
     context "Function invokation" do
+      it "recognizes the list invokation pattern" do
+        code = "(quote (a:))"
+
+        expect(reader.read(code)).to eq [
+          List.create(
+            Symbol.new("quote"),
+            List.create(Atom.new("a:")))
+        ]
+      end
+
+      it "recognizes nested lists" do
+        code = "(quote (a: (b: (c:))))"
+
         expect(reader.read(code)).to eq [
           List.create(
             Symbol.new("quote"),
