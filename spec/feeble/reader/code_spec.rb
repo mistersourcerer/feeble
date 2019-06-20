@@ -45,6 +45,17 @@ module Feeble::Reader
           }
         ]
       end
+
+      it "recognizes nested maps" do
+        expect(reader.read("{a: true b: {c: false}}")).to eq [
+          {
+            Atom.new("a:") => true,
+            Atom.new("b:") => {
+              Atom.new("c:") => false
+            }
+          }
+        ]
+      end
     end
 
     context "Function invokation" do
