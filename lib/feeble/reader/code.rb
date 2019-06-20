@@ -9,7 +9,7 @@ module Feeble::Reader
     end
 
     def read(code, env: nil)
-      reader = Char.new code.strip
+      reader = code.is_a?(Char) ? code : Char.new(code.strip)
       component = ""
       values = []
 
@@ -35,10 +35,28 @@ module Feeble::Reader
           next
         end
 
+        if reader.current == "("
+          values << read_list(reader, env)
+          component = ""
+          next
+        end
+
+        if reader.current == ")"
+          values << make_expression(component) if component.length > 0
+          component = ""
+          break
+        end
+
         if reader.current == "{"
           values << read_map(reader, env)
           component = ""
           next
+        end
+
+        if reader.current == "}"
+          values << make_expression(component) if component.length > 0
+          component = ""
+          break
         end
 
         component << reader.current if reader.current
@@ -131,23 +149,23 @@ module Feeble::Reader
     def read_quote(reader, env)
       reader.next
 
-      quoted_args =
+      args =
         if reader.current == "("
-          reader.next
           List.create(read_list(reader, env))
         else
+          # TODO: WRONG, should be: until next SEPARATOR or eof?
           expression_content = reader.until_next(SEPARATOR)
-          List.create(read(expression_content, env: env))
+          read(expression_content, env: env)
         end
 
-      quoted_args.cons Symbol.new("quote")
+      List.create(Symbol.new("quote"), *args)
     end
 
     def read_list(reader, env)
-      list_content = reader.until_next(")")
+      list_content = read(reader, env: env)
       reader.next
 
-      List.create(*read(list_content, env: env))
+      List.create(*list_content)
     end
   end
 end

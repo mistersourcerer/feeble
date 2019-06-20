@@ -46,6 +46,19 @@ module Feeble::Reader
       end
     end
 
+    context "Function invokation" do
+        expect(reader.read(code)).to eq [
+          List.create(
+            Symbol.new("quote"),
+            List.create(
+              Atom.new("a:"),
+              List.create(
+                Atom.new("b:"),
+                List.create(Atom.new("c:")))))
+        ]
+      end
+    end
+
     context "Function declaration" do
       it "recognizes lambda without params" do
         expect(reader.read "-> {}").to eq [
