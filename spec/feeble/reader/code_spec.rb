@@ -82,6 +82,18 @@ module Feeble::Reader
                 List.create(Keyword.new("c:")))))
         ]
       end
+
+      it "recognizes the 'c-like' invokation pattern" do
+        code = "define(omg, true)"
+
+        expect(reader.read(code)).to eq [
+          List.create(
+            Symbol.new("define"),
+            Symbol.new("omg"),
+            true
+          )
+        ]
+      end
     end
 
     context "Function declaration" do

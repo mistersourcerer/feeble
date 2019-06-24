@@ -37,7 +37,12 @@ module Feeble::Reader
         end
 
         if reader.current == "("
-          values << read_list(reader, env)
+          if component.length > 0
+            values << read_invokation(component, reader, env)
+          else
+            values << read_list(reader, env)
+          end
+
           component = ""
           next
         end
@@ -160,6 +165,12 @@ module Feeble::Reader
       reader.next
 
       List.create(*list_content)
+    end
+
+    def read_invokation(fn_name, reader, env)
+      params = read_list(reader, env)
+
+      List.create(Symbol.new(fn_name), *params)
     end
   end
 end
