@@ -16,7 +16,10 @@ module Feeble::Evaler
 
     def eval_list(list, env)
       if fn = env.lookup(list.first) # && @verify.fn? fn
+        # if fn.special?
         return fn.invoke(env, Array(list.rest))
+        # else, we eval the params:
+        # fn.invoke eval each car of list.rest
       end
 
       raise "Can't invoke <#{list.first}>, not a function"

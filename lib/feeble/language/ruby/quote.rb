@@ -1,7 +1,7 @@
 module Feeble::Language::Ruby
   class Quote
-    def invoke(param)
-      param
+    def invoke(_, params)
+      params.first
     end
   end
 end

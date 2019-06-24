@@ -14,6 +14,7 @@ module Feeble
       reader = Feeble::Reader::Code.new
       evaler = Feeble::Evaler::Lispey.new
       printer = Feeble::Printer::Expression.new
+      env = Feeble::Language::Ruby::Fbl.new
 
       while true
         begin
@@ -23,9 +24,9 @@ module Feeble
 
           break if execute(input) if COMMAND.match? input
 
-          expressions = reader.read(input)
+          expressions = reader.read(input, env: env)
           result = expressions.reduce(nil) { |res, expression|
-            res = evaler.eval expression
+            res = evaler.eval expression, env: env
           }
 
           printer.print result
