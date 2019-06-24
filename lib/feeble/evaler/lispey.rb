@@ -16,14 +16,20 @@ module Feeble::Evaler
 
     def eval_list(list, env)
       if fn = env.lookup(list.first) # && @verify.fn? fn
-        return fn.invoke(*Array(list.rest))
+        return fn.invoke(env, Array(list.rest))
       end
 
       raise "Can't invoke <#{list.first}>, not a function"
     end
 
     def eval_expression(expression, env)
-      expression
+      if @verify.symbol? expression
+        # TODO: maybe raise if not registered (instead of returning undefined)
+        #   "unable to resolve" is actually pretty sweet
+        env.lookup expression
+      else
+        expression
+      end
     end
   end
 end

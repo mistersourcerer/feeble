@@ -17,5 +17,14 @@ module Feeble::Evaler
         expect(evaler.eval(expression)).to eq List.create(Symbol.new("a"))
       end
     end
+
+    context "resolving symbols" do
+      it "evaluates a Symbol to it's (env) underlying value" do
+        env = Env.new
+        env.register Symbol.new("lol"), true
+
+        expect(evaler.eval(Symbol.new("lol"), env: env)).to eq true
+      end
+    end
   end
 end
