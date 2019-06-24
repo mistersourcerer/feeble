@@ -9,14 +9,14 @@ module Feeble::Printer
     describe "#print" do
       it "prints to a specific output stream" do
         output = StringIO.new
-        printer.print(Atom.new("a:"), to: output)
+        printer.print(Keyword.new("a:"), to: output)
 
         expect(output.string).to eq " > a:"
       end
 
       it "uses stdout by default" do
         expect {
-          printer.print(Atom.new("a:"))
+          printer.print(Keyword.new("a:"))
         }.to output(" > a:").to_stdout
       end
     end

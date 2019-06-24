@@ -1,5 +1,5 @@
 module Feeble::Runtime
-  class Atom
+  class Keyword
     def initialize(id)
       @symbol = Symbol.new(id)
     end

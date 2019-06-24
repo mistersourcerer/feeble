@@ -14,10 +14,10 @@ module Feeble::Reader
       end
     end
 
-    context "Atoms" do
+    context "Keywords" do
       it "recognizes an atom in the wild" do
         expect(reader.read "a:").to eq [
-          Atom.new("a:")
+          Keyword.new("a:")
         ]
       end
     end
@@ -33,15 +33,15 @@ module Feeble::Reader
       it "recognizes maps (as 'host' Hash)" do
         expect(reader.read(" {a: true b: false} ")).to eq [
           {
-            Atom.new("a:") => true,
-            Atom.new("b:") => false
+            Keyword.new("a:") => true,
+            Keyword.new("b:") => false
           }
         ]
 
         expect(reader.read(" {a: true, b: false} ")).to eq [
           {
-            Atom.new("a:") => true,
-            Atom.new("b:") => false
+            Keyword.new("a:") => true,
+            Keyword.new("b:") => false
           }
         ]
       end
@@ -49,9 +49,9 @@ module Feeble::Reader
       it "recognizes nested maps" do
         expect(reader.read("{a: true b: {c: false}}")).to eq [
           {
-            Atom.new("a:") => true,
-            Atom.new("b:") => {
-              Atom.new("c:") => false
+            Keyword.new("a:") => true,
+            Keyword.new("b:") => {
+              Keyword.new("c:") => false
             }
           }
         ]
@@ -65,7 +65,7 @@ module Feeble::Reader
         expect(reader.read(code)).to eq [
           List.create(
             Symbol.new("quote"),
-            List.create(Atom.new("a:")))
+            List.create(Keyword.new("a:")))
         ]
       end
 
@@ -76,10 +76,10 @@ module Feeble::Reader
           List.create(
             Symbol.new("quote"),
             List.create(
-              Atom.new("a:"),
+              Keyword.new("a:"),
               List.create(
-                Atom.new("b:"),
-                List.create(Atom.new("c:")))))
+                Keyword.new("b:"),
+                List.create(Keyword.new("c:")))))
         ]
       end
     end
@@ -88,14 +88,14 @@ module Feeble::Reader
       it "recognizes lambda without params" do
         expect(reader.read "-> {a:}").to eq [
           List.create(
-            Symbol.new("lambda"), [Atom.new("a:")])
+            Symbol.new("lambda"), [Keyword.new("a:")])
         ]
       end
 
       it "recognizes lambda with some body" do
         expect(reader.read "-> { yes: }").to eq [
           List.create(
-            Symbol.new("lambda"), [Atom.new("yes:")])
+            Symbol.new("lambda"), [Keyword.new("yes:")])
         ]
       end
 
@@ -115,7 +115,7 @@ module Feeble::Reader
             Symbol.new("lambda"),
             [Symbol.new("a"), Symbol.new("b")],
             [true],
-            {Atom.new("special:") => false})
+            {Keyword.new("special:") => false})
         ]
       end
     end

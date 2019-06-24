@@ -74,7 +74,7 @@ module Feeble::Reader
     SEPARATOR = /\A[\s,]/
 
     def make_expression(component)
-      return Atom.new(component) if component.end_with? ":"
+      return Keyword.new(component) if component.end_with? ":"
 
       value = value_of(component)
       if value.nil?
