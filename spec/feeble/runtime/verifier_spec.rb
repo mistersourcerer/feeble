@@ -18,5 +18,15 @@ module Feeble::Runtime
         expect(verify.symbol?(nil)).to eq false
       end
     end
+
+    describe "#keyword?" do
+      it "returns true only for Keywords" do
+        expect(verify.keyword?(Keyword.new("omg:"))).to eq true
+        expect(verify.keyword?("omg:")).to eq false
+        expect(verify.keyword?(:"omg:")).to eq false
+        expect(verify.keyword?(:omg)).to eq false
+        expect(verify.keyword?(nil)).to eq false
+      end
+    end
   end
 end

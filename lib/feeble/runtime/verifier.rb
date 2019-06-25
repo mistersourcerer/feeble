@@ -7,5 +7,9 @@ module Feeble::Runtime
     def symbol?(obj)
       obj.is_a? Feeble::Runtime::Symbol
     end
+
+    def keyword?(obj)
+      obj.is_a? Keyword
+    end
   end
 end
