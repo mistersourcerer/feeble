@@ -16,6 +16,13 @@ module Feeble::Runtime
 
         expect(env.lookup(Symbol.new(1))).to eq "omg"
       end
+
+      it "fallbacks to the 'around' environment if symbol not found" do
+        env.register Symbol.new("lol"), "bbq"
+        inner = Env.new env
+
+        expect(inner.lookup(Symbol.new("lol"))).to eq "bbq"
+      end
     end
   end
 end
