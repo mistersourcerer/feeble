@@ -16,8 +16,15 @@ module Feeble::Evaler
 
     def eval_list(list, env)
       if fn = env.lookup(list.first) # && @verify.fn? fn
-        # if fn.special?
-        return fn.invoke(env, Array(list.rest))
+        if fn.prop?(:special)
+          env.register Feeble::Runtime::Symbol.new("%xenv"), env
+          return fn.invoke(*Array(list.rest), scope: env)
+        else
+          evaled = Array(list.rest).map { |expression|
+            eval_expression(expression, env)
+          }
+          return fn.invoke(*evaled, scope: env)
+        end
         # else, we eval the params:
         # fn.invoke eval each car of list.rest
       end

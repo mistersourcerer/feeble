@@ -6,6 +6,7 @@ module Feeble::Runtime
       end
 
       arities_identifier =
+        # TODO: generalize star so it can appear in any position
         if names.length == 1 && String(names.first).start_with?("*")
           "*"
         else
@@ -36,6 +37,14 @@ module Feeble::Runtime
       function[:callable].call(env)
     end
 
+    def prop(key, value = true)
+      _props[key] = value
+    end
+
+    def prop?(key)
+      _props[key] == true
+    end
+
     private
 
     def _verify
@@ -49,6 +58,10 @@ module Feeble::Runtime
     def _arity_for(params)
       _arities.fetch(params.count) { _arities["*"] } ||
         raise(ArityMismatch.new(params.count, _arities))
+    end
+
+    def _props
+      @_props ||= {}
     end
   end
 

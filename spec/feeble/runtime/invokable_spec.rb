@@ -109,6 +109,12 @@ module Feeble::Runtime
       end
     end
 
-    context "Properties and execution strategy"
+    context "Properties and execution strategy" do
+      it "allows to mark an invokable as special" do
+        fn.prop(:special)
+
+        expect(fn.prop?(:special)).to eq true
+      end
+    end
   end
 end

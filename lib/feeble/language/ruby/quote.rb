@@ -1,7 +1,12 @@
 module Feeble::Language::Ruby
   class Quote
-    def invoke(_, params)
-      params.first
+    include Feeble::Runtime
+    include Invokable
+
+    def initialize
+      prop :special
+
+      arity(Symbol.new("value")) { |env| env.lookup(Symbol.new("value")) }
     end
   end
 end
