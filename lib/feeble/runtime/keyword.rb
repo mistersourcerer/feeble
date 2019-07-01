@@ -1,5 +1,7 @@
 module Feeble::Runtime
   class Keyword
+    include Feeble::Printer::Printable
+
     def initialize(id)
       @symbol = Symbol.new(id)
     end
@@ -21,7 +23,7 @@ module Feeble::Runtime
       value.hash + :atom.hash
     end
 
-    def printable
+    def to_s
       @symbol.id
     end
   end

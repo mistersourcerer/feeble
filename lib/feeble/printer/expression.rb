@@ -13,8 +13,8 @@ module Feeble::Printer
     private
 
     def printable_for(expression)
-      if expression.respond_to?(:printable)
-        expression.printable { |el| printable_for(el) }
+      if expression.is_a?(Printable)
+        expression.to_print { |el| printable_for(el) }
       else
         expression.inspect
       end

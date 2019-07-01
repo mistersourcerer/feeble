@@ -1,5 +1,6 @@
 module Feeble::Runtime
   class List
+    include Feeble::Printer::Printable
     include ListProperties
 
     def self.create(*args)
@@ -44,7 +45,7 @@ module Feeble::Runtime
       [first] + rest.to_a
     end
 
-    def printable(&printable_for)
+    def to_print(&printable_for)
       and_more = count > 5 ? " ..." : ""
       elements = Array(@fn.take(5, self))
       "(#{elements.map{ |el| printable_for.call(el) }.join(" ")}#{and_more})"

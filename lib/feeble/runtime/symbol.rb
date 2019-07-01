@@ -1,5 +1,7 @@
 module Feeble::Runtime
   class Symbol
+    include Feeble::Printer::Printable
+
     attr_reader :id
 
     def initialize(id)
