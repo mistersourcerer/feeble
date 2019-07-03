@@ -1,5 +1,7 @@
 module Feeble::Runtime
   module Invokable
+    include Feeble::Printer::Printable
+
     def arity(*names, &callable)
       if names.find { |name| !_verify.symbol? name }
         raise ArgumentTypeMismatch.new(nil, Symbol)
@@ -43,6 +45,13 @@ module Feeble::Runtime
 
     def prop?(key)
       _props[key] == true
+    end
+
+    def to_print
+      _arities.keys.map { |arity|
+        names = _arities[arity][:symbols]
+        "lambda(#{names.map(&:id).join(", ")})"
+      }.join("\n")
     end
 
     private

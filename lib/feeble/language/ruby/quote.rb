@@ -6,7 +6,9 @@ module Feeble::Language::Ruby
     def initialize
       prop :special
 
-      arity(Symbol.new("value")) { |env| env.lookup(Symbol.new("value")) }
+      arity(Symbol.new("expression")) { |env|
+        env.lookup(Symbol.new("expression"))
+      }
     end
   end
 end
