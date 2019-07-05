@@ -1,101 +1,88 @@
 module Feeble::Runtime
   module Invokable
-    class InvalidParamName < StandardError; end
+    include Feeble::Printer::Printable
 
-    def add_arity(*param_names, &procedure)
-      if name = param_names.find { |name| !verify.symbol?(name) }
-        raise InvalidParamName.new("expected #{name} to be a Symbol")
+    def arity(*names, &callable)
+      if names.find { |name| !_verify.symbol? name }
+        raise ArgumentTypeMismatch.new(nil, Symbol)
       end
-      arities[param_names.count] = InvokationShape.new param_names, procedure
-    end
 
-    def add_var_args(param_name, &procedure)
-      self.var_args = InvokationShape.new Array(param_name), procedure
-    end
-
-    def invoke(*params, scope: nil, evaler: Feeble::Evaler::Lispey.new)
-      current_invokation = current_invokation_from(params)
-      env = bind_args(current_invokation, params).wrap(scope)
-
-      current_invokation.call env, evaler
-    end
-
-    def put(property, value = true)
-      # TODO: raise if property isn't a symbol
-      _props.put property, value
-    end
-
-    def get(property)
-      _props.get property
-    end
-
-    def is?(property_name)
-      get(Symbol.new(property_name)) == true
-    end
-
-    # TODO: so something about the private methods included here.
-    # Maybe prefix them (a simple _ should be enough).
-    private
-
-    attr_accessor :var_args
-
-    def arities
-      @arities ||= {}
-    end
-
-    def verify
-      @verify ||= Verifier.new
-    end
-
-    def current_invokation_from(params)
-      current_invokation = shape_for_arity(params) || var_args
-
-      if !current_invokation
-        raise "No function with arity #{params.count} was found."
-      else
-        current_invokation
-      end
-    end
-
-    def shape_for_arity(args)
-      arities[args.length]
-    end
-
-    def bind_args(invokation_shape, args)
-      Env.new.tap { |env|
-        if var_args?(invokation_shape, args)
-          env.register invokation_shape.params.first, args
+      arities_identifier =
+        # TODO: generalize star so it can appear in any position
+        if names.length == 1 && String(names.first).start_with?("*")
+          "*"
         else
-          invokation_shape.register env, args
+          names.count
         end
+
+      _arities[arities_identifier] = {
+        callable: callable,
+        symbols: names,
       }
     end
 
-    def var_args?(invokation_shape, args)
-      invokation_shape.params.count == 1 && args.count > 1
+    def invoke(*params, scope: EnvNull.instance)
+      env = Env.new(scope)
+      function = _arity_for(params)
+
+      function[:symbols].each_with_index do |symbol, index|
+        name, value =
+          if String(symbol).start_with?("*")
+            [Symbol.new(String(symbol)[1..]), params]
+          else
+            [symbol, params[index]]
+          end
+
+        env.register name, value
+      end
+
+      function[:callable].call(env)
+    end
+
+    def prop(key, value = true)
+      _props[key] = value
+    end
+
+    def prop?(key)
+      _props[key] == true
+    end
+
+    def to_print
+      _arities.keys.map { |arity|
+        names = _arities[arity][:symbols]
+        "lambda(#{names.map(&:id).join(", ")})"
+      }.join("\n")
+    end
+
+    private
+
+    def _verify
+      @_verify ||= Verifier.new
+    end
+
+    def _arities
+      @_arities ||= {}
+    end
+
+    def _arity_for(params)
+      _arities.fetch(params.count) { _arities["*"] } ||
+        raise(ArityMismatch.new(params.count, _arities))
     end
 
     def _props
-      @_props ||= Map.new
+      @_props ||= {}
     end
   end
 
-  class InvokationShape
-    attr_reader :params
-
-    def initialize(params, procedure)
-      @params = params
-      @procedure = procedure
+  class ArityMismatch < StandardError
+    def initialize(given, arities)
+      super with_message(given, arities)
     end
 
-    def call(env, evaler)
-      @procedure.call env, evaler
-    end
+    private
 
-    def register(env, args)
-      params.each_with_index do |param, index|
-        env.register param, args[index]
-      end
+    def with_message(given, arities)
+      "No arity < #{given} > for this function. Existent: #{arities.keys.join(", ")}"
     end
   end
 end

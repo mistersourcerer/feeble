@@ -1,16 +1,18 @@
 module Feeble::Runtime
-  class Symbol
+  class Keyword
     include Feeble::Printer::Printable
 
-    attr_reader :id
-
     def initialize(id)
-      @id = String(id).to_sym
+      @symbol = Symbol.new(id)
+    end
+
+    def value
+      @symbol
     end
 
     def ==(other)
       return false if self.class != other.class
-      id == other.id
+      value == other.value
     end
 
     def eql?(other)
@@ -18,11 +20,11 @@ module Feeble::Runtime
     end
 
     def hash
-      id.hash + :symbol.hash
+      value.hash + :atom.hash
     end
 
     def to_s
-      id.to_s
+      @symbol.id
     end
   end
 end

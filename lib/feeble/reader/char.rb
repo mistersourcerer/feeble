@@ -2,12 +2,14 @@ require "logger"
 
 module Feeble::Reader
   class Char
+    attr_reader :prev
     # TODO: consider enumerable...
 
     def initialize(string, debug: false)
       # TODO: if string is a IO stream already, do not convert it.
       @io = StringIO.new(string)
       @started = false
+      @prev = nil
 
       @logger = Logger.new(STDOUT)
       @logger.level = debug ? Logger::DEBUG : Logger::INFO
@@ -22,6 +24,8 @@ module Feeble::Reader
     end
 
     def next
+      @prev = @current
+
       if @peek
         @current = @peek
         @peek = nil
@@ -49,7 +53,7 @@ module Feeble::Reader
       @peek == nil && @io.eof?
     end
 
-    def until_next(pattern, &condition)
+    def until_next(pattern, or_eof: false, &condition)
       condition ||=
         if pattern.is_a?(Regexp)
           ->(current_char, _) { pattern.match? current_char }
@@ -57,10 +61,10 @@ module Feeble::Reader
           ->(current_char, _) { pattern == current_char }
         end
 
-      read_until("Expected #{pattern} but nothing was found", &condition)
+      read_until("Expected #{pattern} but nothing was found", or_eof, &condition)
     end
 
-    def read_until(raise_not_found = nil, &condition)
+    def read_until(raise_not_found = nil, or_eof = false, &condition)
       condition ||= ->(_, _) { false }
 
       if condition.call(self.current, nil)
@@ -103,9 +107,12 @@ module Feeble::Reader
       @logger.debug "  looking to #{self.current}"
       @logger.debug "  accumulator is: #{string}"
       @logger.debug "  found? < #{found} > AND raise: < #{raise_not_found} >"
-      raise raise_not_found if !found && !raise_not_found.nil?
 
-      string
+      if !or_eof && !found && !raise_not_found.nil?
+        raise raise_not_found
+      else
+        string
+      end
     end
 
     def logger_level(level)

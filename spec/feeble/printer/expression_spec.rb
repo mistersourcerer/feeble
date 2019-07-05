@@ -1,22 +1,23 @@
+require "stringio"
+
 module Feeble::Printer
+  include Feeble::Runtime
+
   RSpec.describe Expression do
     subject(:printer) { described_class.new }
 
-    describe "#to_print" do
-      context "Strings" do
-        it "returns formatted string" do
-          expect(printer.to_print "lol").to eq "\"lol\""
-        end
+    describe "#print" do
+      it "prints to a specific output stream" do
+        output = StringIO.new
+        printer.print(Keyword.new("a:"), to: output)
+
+        expect(output.string).to eq " > a:"
       end
 
-      context "Numbers" do
-        it "returns formatted int" do
-          expect(printer.to_print 1).to eq "1"
-        end
-
-        it "returns formatted float" do
-          expect(printer.to_print 1.2).to eq "1.2"
-        end
+      it "uses stdout by default" do
+        expect {
+          printer.print(Keyword.new("a:"))
+        }.to output(" > a:").to_stdout
       end
     end
   end

@@ -4,81 +4,37 @@ module Feeble::Evaler
   RSpec.describe Lispey do
     subject(:evaler) { described_class.new }
 
-    describe "#eval" do
-      context "Lists" do
-        class ZeroParam
-          include Feeble::Runtime::Invokable
+    context "quoting" do
+      it "knows how to apply the 'quote' function" do
+        expression = List.create(Symbol.new("quote"), Symbol.new("a"))
 
-          def initialize
-            add_arity { "yup" }
-          end
-        end
+        expect(evaler.eval(expression)).to eq Symbol.new("a")
+      end
 
-        it "knows to invoke fn without parameters" do
-          env = Env.new
-          env.register Symbol.new("zero"), ZeroParam.new
-          invokation = List.create Symbol.new("zero")
+      it "knows how to apply the 'quote' function to a List" do
+        expression = List.create(Symbol.new("quote"), List.create(Symbol.new("a")))
 
-          expect(evaler.eval(invokation, env: env)).to eq "yup"
-        end
-
-        it "interprets a list as an invocation" do
-          ping = List.create Symbol.new("%_ping"), "world"
-
-          expect(evaler.eval(ping)).to eq "pong with: world"
-        end
-
-        it "raise runtime error if form is not sym, primitive, fun or lookup" do
-          expect {
-            evaler.eval(List.create("nothing"))
-          }.to raise_error "Can't invoke <nothing>, nor recognize it as a form"
-        end
+        expect(evaler.eval(expression)).to eq List.create(Symbol.new("a"))
       end
     end
 
-    context "interop" do
-      describe "::" do
-        it "translates 'square' invokation into host invokation" do
-          # ::print(1)
+    context "resolving symbols" do
+      it "evaluates a Symbol to it's (env) underlying value" do
+        env = Env.new
+        env.register Symbol.new("lol"), true
 
-          host_invokation = List.create(
-            Symbol.new("::"),
-            Symbol.new("print"),
-            List.create(Symbol.new("%arr"), 1)
-          )
-
-          expect {
-            expect(evaler.eval(host_invokation)).to eq nil
-          }.to output("1").to_stdout
-        end
+        expect(evaler.eval(Symbol.new("lol"), env: env)).to eq true
       end
+    end
 
-      it "invokes method in the Kernel scope" do
-        # ::print(1)
+    context "defining values" do
+      it "associates a value with a symbol/name" do
+        expression = List.create(
+          Symbol.new("define"), Symbol.new("lol"), "bbq")
+        env = Env.new(Feeble::Language::Ruby::Fbl.new)
+        evaler.eval(expression, env: env)
 
-        puts_invokation = List.create(
-          Symbol.new("%host"),
-          Symbol.new("."),
-          Symbol.new("Kernel"),
-          Symbol.new("print"),
-          1)
-
-        # should return nil and print to stdout
-        expect {
-          expect(evaler.eval(puts_invokation)).to eq nil
-        }.to output("1").to_stdout
-      end
-
-      it "invokes method on object from host" do
-        # ::"lol".upcase()
-
-        invokation = List.create(
-          Symbol.new("%host"),
-          Symbol.new("."),
-          "lol",
-          Symbol.new("upcase"))
-
-        expect(evaler.eval(invokation)).to eq "LOL"
+        expect(env.lookup(Symbol.new("lol"))).to eq "bbq"
       end
     end
   end

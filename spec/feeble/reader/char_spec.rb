@@ -114,6 +114,39 @@ module Feeble::Reader
 
         expect(string).to eq "omg lol"
       end
+
+      it "accepts a flag for 'or pattern or eof?'" do
+        reader = described_class.new("omg lol")
+        string = reader.until_next("|", or_eof: true)
+
+        expect(string).to eq "omg lol"
+      end
+    end
+
+    describe "#prev" do
+      it "returns the previous char before the current one" do
+        reader.next
+        reader.next
+
+        expect(reader.prev).to eq "o"
+      end
+
+      it "returns nil if first char" do
+        reader.next
+
+        expect(reader.prev).to eq nil
+      end
+
+      it "returns nil if not started" do
+        expect(reader.prev).to eq nil
+      end
+
+      it "returns last char if eof?" do
+        reader.until_next("q")
+        reader.next
+
+        expect(reader.prev).to eq "q"
+      end
     end
   end
 end

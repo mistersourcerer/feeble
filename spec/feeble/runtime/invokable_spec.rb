@@ -1,116 +1,119 @@
+require "feeble/runtime/argument_type_mismatch"
+
 module Feeble::Runtime
-  class Fn
+  class SomeFunction
     include Invokable
   end
 
-  RSpec.describe Fn do
+  RSpec.describe SomeFunction do
     subject(:fn) { described_class.new }
 
-    context "multiple arities" do
-      describe "#add_arity" do
-        it "ties a 'block' with a number of parameters" do
-          fn.add_arity(Symbol.new(:param1)) { 1 }
-          fn.add_arity(Symbol.new(:param1), Symbol.new(:param2)) { 2 }
+    describe "#arity" do
+      it "only accepts symbols" do
+        expect {
+          fn.arity(:omg)
+        }.to raise_error ArgumentTypeMismatch
+        # TODO: why Zeitwerk doesn't find this one without the require?
+        #   might be a bug...
+      end
+    end
 
-          expect(fn.invoke(:one)).to eq 1
-          expect(fn.invoke(:one, :two)).to eq 2
-        end
+    describe "#invoke" do
+      it "returns the value returned by the block" do
+        fn.arity(Symbol.new("a")) { 1 }
 
-        it "raises if non-symbols are passed as param names" do
-          expect { fn.add_arity(:oh_no) }
-            .to raise_error(Invokable::InvalidParamName)
+        expect(fn.invoke(nil)).to eq 1
+      end
 
-          expect { fn.add_arity(1) }
-            .to raise_error(Invokable::InvalidParamName)
-        end
+      it "raises if the function doesn't have the given arity" do
+        fn.arity(Symbol.new("only_one")) { 1 }
 
-        it "handles 0 arity" do
-          fn.add_arity { "no-params!" }
+        expect { fn.invoke }.to raise_error ArityMismatch
+      end
+    end
 
-          expect(fn.invoke).to eq "no-params!"
+    context "Invoke routing via arity" do
+      it "routes the invokation to the correct arity" do
+        arity_one = false
+        fn.arity(Symbol.new("a")) { |env|
+          arity_one = true
+        }
+
+        bigger_arity = false
+        fn.arity(Symbol.new("a"), Symbol.new("b")) { |env|
+          bigger_arity = true
+        }
+
+        fn.invoke 1
+        expect(arity_one).to eq true
+        expect(bigger_arity).to eq false
+
+        arity_one = false
+        fn.invoke 1, 2
+        expect(arity_one).to eq false
+        expect(bigger_arity).to eq true
+      end
+
+      it "creates variables named after the arguments declared" do
+        value = nil
+        fn.arity(Symbol.new("a")) { |env|
+          value = env.lookup(Symbol.new("a"))
+        }
+
+        fn.invoke 1
+        expect(value).to eq 1
+      end
+
+      context "varargs" do
+        it "allow create a varargs function using the splat syntax" do
+          values = nil
+          fn.arity(Symbol.new("*stuff")) { |env|
+            values = env.lookup(Symbol.new("stuff"))
+          }
+
+          fn.invoke 1, 2, 3, 4
+          expect(values).to eq [1, 2, 3, 4]
+
+          fn.invoke
+          expect(values).to eq []
+
+          fn.invoke "1", "2"
+          expect(values).to eq ["1", "2"]
         end
       end
 
-      describe "#var_args" do
-        it "associates a block with a variable number of args" do
-          fn.add_var_args(Symbol.new(:args)) { "var-args" }
+      context "scope" do
+        it "creates an environment for the invokation" do
+          value = nil
+          outter_scope = Env.new
+          outter_scope.register Symbol.new("lol"), true
+          fn.arity(Symbol.new("lol")) { |env|
+            value = env.lookup Symbol.new("lol")
+          }
 
-          expect(fn.invoke(:one)).to eq "var-args"
-          expect(fn.invoke(:one, :two)).to eq "var-args"
+          fn.invoke(false, scope: outter_scope)
+          expect(value).to eq false
         end
 
-        it "ensures var args have the lowest precedence" do
-          fn.add_var_args(Symbol.new(:args)) { "var-args" }
-          fn.add_arity(Symbol.new(:priority)) { "explicit-arity" }
+        it "fallback to the external scope" do
+          value = nil
+          outter_scope = Env.new
+          outter_scope.register Symbol.new("lol"), true
+          fn.arity(Symbol.new("dont_override")) { |env|
+            value = env.lookup Symbol.new("lol")
+          }
 
-          expect(fn.invoke(:one)).to eq "explicit-arity"
-          expect(fn.invoke(:one, :two)).to eq "var-args"
-          expect(fn.invoke(:one, :two, :tree)).to eq "var-args"
+          fn.invoke(false, scope: outter_scope)
+          expect(value).to eq true
         end
       end
     end
 
-    context "invokation" do
-      describe "#invoke" do
-        it "bind arguments to the parameter (names)" do
-          fn.add_arity(Symbol.new(:param1), Symbol.new(:param2)) { |env|
-            param1 = env.lookup Symbol.new(:param1)
-            param2 = env.lookup Symbol.new(:param2)
-            "#{param1}:#{param2}"
-          }
+    context "Properties and execution strategy" do
+      it "allows to mark an invokable as special" do
+        fn.prop(:special)
 
-          expect(fn.invoke("one", "two")).to eq "one:two"
-        end
-
-        it "searches external scope for values" do
-          scope = Env.new.tap { |e| e.register(Symbol.new(:external), 1) }
-          fn.add_arity(Symbol.new(:internal)) { |env|
-            external = env.lookup Symbol.new(:external)
-            internal = env.lookup Symbol.new(:internal)
-
-            external + internal
-          }
-          result = fn.invoke(2, scope: scope)
-
-          expect(result).to eq 3
-        end
-      end
-    end
-
-    describe "#props" do
-      it "associates value with a given symbol" do
-        fn.put Symbol.new(:this), "is good"
-
-        expect(fn.get(Symbol.new(:this))).to eq "is good"
-      end
-
-      it "associates true with property if no value is given" do
-        fn.put Symbol.new(:you_sure?)
-
-        expect(fn.get(Symbol.new(:you_sure?))).to eq true
-      end
-
-      describe "#is? as a shorthand for accessing boolean props" do
-        it "returns true for existent true props" do
-          fn.put Symbol.new(:awesome)
-
-          expect(fn.is? :awesome).to eq true
-          expect(fn.is? "awesome").to eq true
-        end
-
-        it "returns false for false/inexistent props" do
-          fn.put Symbol.new(:awesome), false
-
-          expect(fn.is? :awesome).to eq false
-          expect(fn.is? "awesome").to eq false
-          expect(fn.is? "anything?").to eq false
-        end
-
-        it "returns false for non-true props" do
-          fn.put Symbol.new(:awesome), "true"
-
-          expect(fn.is? :awesome).to eq false
-        end
+        expect(fn.prop?(:special)).to eq true
       end
     end
   end

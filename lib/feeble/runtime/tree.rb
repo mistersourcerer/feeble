@@ -12,7 +12,7 @@ module Feeble::Runtime
     def search(pattern)
       node = self
 
-      pattern.each_char.with_index do |char|
+      pattern.each_char do |char|
         if node.children.key? char
           node = node.children[char]
         else
@@ -37,7 +37,7 @@ module Feeble::Runtime
 
       # means the word is not here yet
       if stopped_at
-        pattern[stopped_at..].each_char.with_index do |char, idx|
+        pattern[stopped_at..].each_char do |char|
           node = node.children[char] = self.class.new
         end
       end

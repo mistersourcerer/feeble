@@ -4,98 +4,147 @@ module Feeble::Reader
   RSpec.describe Code do
     subject(:reader) { described_class.new }
 
-    def eval_list(*values)
-      List.create(Symbol.new("eval"), *values)
+    context "Quoting" do
+      it "reads ' syntax into a (quote ...) invokation" do
+        expect(reader.read "'(a)").to eq [
+          List.create(
+            Symbol.new("quote"),
+            List.new(Symbol.new("a")))
+        ]
+      end
     end
 
-    describe ".read" do
-      context "Interop with square function" do
-        it "reads :: expressions as a direct Ruby (host) code invocation" do
-          code = "::puts(1)"
+    context "Keywords" do
+      it "recognizes an atom in the wild" do
+        expect(reader.read "a:").to eq [
+          Keyword.new("a:")
+        ]
+      end
+    end
 
-          expect(reader.read(code)).to eq List.create(
-            Symbol.new("%host"),
-            Symbol.new("."),
-            Symbol.new("Kernel"),
-            Symbol.new("puts"),
-            1
+    context "Booleans" do
+      it "recognizes boolean values (as 'host' Boolean)" do
+        expect(reader.read(" true ")).to eq [true]
+        expect(reader.read(" false ")).to eq [false]
+      end
+    end
+
+    context "Maps" do
+      it "recognizes maps (as 'host' Hash)" do
+        expect(reader.read(" {a: true b: false} ")).to eq [
+          {
+            Keyword.new("a:") => true,
+            Keyword.new("b:") => false
+          }
+        ]
+
+        expect(reader.read(" {a: true, b: false} ")).to eq [
+          {
+            Keyword.new("a:") => true,
+            Keyword.new("b:") => false
+          }
+        ]
+      end
+
+      it "recognizes nested maps" do
+        expect(reader.read("{a: true b: {c: false}}")).to eq [
+          {
+            Keyword.new("a:") => true,
+            Keyword.new("b:") => {
+              Keyword.new("c:") => false
+            }
+          }
+        ]
+      end
+    end
+
+    context "Function invokation" do
+      it "recognizes the list invokation pattern" do
+        code = "(quote (a:))"
+
+        expect(reader.read(code)).to eq [
+          List.create(
+            Symbol.new("quote"),
+            List.create(Keyword.new("a:")))
+        ]
+      end
+
+      it "recognizes nested lists" do
+        code = "(quote (a: (b: (c:))))"
+
+        expect(reader.read(code)).to eq [
+          List.create(
+            Symbol.new("quote"),
+            List.create(
+              Keyword.new("a:"),
+              List.create(
+                Keyword.new("b:"),
+                List.create(Keyword.new("c:")))))
+        ]
+      end
+
+      it "recognizes the 'c-like' invokation pattern" do
+        code = "define(omg, true)"
+
+        expect(reader.read(code)).to eq [
+          List.create(
+            Symbol.new("define"),
+            Symbol.new("omg"),
+            true
           )
-        end
+        ]
+      end
+    end
 
-        it "Translate" do
-          code = '::"omg".upcase()'
+    context "Function declaration" do
+      it "recognizes lambda without params" do
+        expect(reader.read "-> {a:}").to eq [
+          List.create(
+            Symbol.new("lambda"), [Keyword.new("a:")])
+        ]
+      end
 
-          expect(reader.read(code)).to eq List.create(
-            Symbol.new("%host"),
-            Symbol.new("."),
-            "omg",
-            Symbol.new("upcase")
+      it "recognizes lambda with some body" do
+        expect(reader.read "-> { yes: }").to eq [
+          List.create(
+            Symbol.new("lambda"), [Keyword.new("yes:")])
+        ]
+      end
+
+      it "recognizes lambda with params" do
+        expect(reader.read "-> a, b { true }").to eq [
+          List.create(
+            Symbol.new("lambda"),
+            [Symbol.new("a"), Symbol.new("b")],
+            [true]
           )
-        end
+        ]
       end
 
-      context "Numbers" do
-        it "recognizes integers" do
-          expect(reader.read("123")).to eq 123
-          expect(reader.read("123_555")).to eq 123555
-          expect(reader.read("123_555_2")).to eq 1235552
-        end
+      it "recognizes lambda with params and meta-data" do
+        expect(reader.read "-> a, b {special: false} { true }").to eq [
+          List.create(
+            Symbol.new("lambda"),
+            [Symbol.new("a"), Symbol.new("b")],
+            [true],
+            {Keyword.new("special:") => false})
+        ]
+      end
+    end
 
-        it "recognizes floats" do
-          expect(reader.read("123.2")).to eq 123.2
-          expect(reader.read("123_555.2")).to eq 123555.2
-          expect(reader.read("123_555_2.2")).to eq 1235552.2
-        end
+    context "Numbers" do
+      it "recognizes integers" do
+        expect(reader.read "1").to eq [1]
+        expect(reader.read "1_001").to eq [1001]
+        expect(reader.read "-1").to eq [-1]
+        expect(reader.read "-100_1").to eq [-1001]
       end
 
-      context "Strings" do
-        it "recognizes strings" do
-          expect(reader.read("\"lol\"")).to eq "lol"
-        end
-      end
-
-      context "Symbols" do
-        it "recognizes symbols" do
-          expect(reader.read("omg")).to eq Symbol.new("omg")
-        end
-      end
-
-      context "Arrays" do
-        it "recognizes array declarations" do
-          expect(reader.read("[1]")).to eq List.create(Symbol.new("%arr"), 1)
-        end
-
-        it "recognizes multiple values comma separated" do
-          expect(reader.read("[1, 2, 3, 4]")).to eq List.create(Symbol.new("%arr"), 1, 2, 3, 4)
-        end
-
-        it "recognizes multiple values space separated" do
-          expect(reader.read("[1 2 3 4]")).to eq List.create(Symbol.new("%arr"), 1, 2, 3, 4)
-        end
-      end
-
-      context "Lists" do
-        it "recognizes a list invokation" do
-          expect(reader.read("(%arr 1, 2, 3)")).to eq List.create(Symbol.new("%arr"), 1, 2, 3)
-          expect(reader.read("(   %arr 1, 2, 3)")).to eq List.create(Symbol.new("%arr"), 1, 2, 3)
-          expect(reader.read("(   %arr 1, 2, 3   )")).to eq List.create(Symbol.new("%arr"), 1, 2, 3)
-        end
-
-        it "recognizes an invokation without parameters" do
-          expect(reader.read("(%arr)")).to eq List.create(Symbol.new("%arr"))
-          expect(reader.read("(%arr   )")).to eq List.create(Symbol.new("%arr"))
-          expect(reader.read("(   %arr   )")).to eq List.create(Symbol.new("%arr"))
-        end
-
-        it "recognizes the quoting of a list" do
-          expect(reader.read("'(this is a list)")).to eq List.create(
-            Symbol.new("%list"),
-            Symbol.new("this"),
-            Symbol.new("is"),
-            Symbol.new("a"),
-            Symbol.new("list"),
-          )
-        end
+      it "recognizes floats" do
+        expect(reader.read "4.2").to eq [4.2]
+        expect(reader.read "4_200.1").to eq [4200.1]
+        expect(reader.read "-4.2").to eq [-4.2]
+        expect(reader.read "-4_200.1").to eq [-4200.1]
       end
     end
   end

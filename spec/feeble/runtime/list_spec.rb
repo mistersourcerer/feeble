@@ -25,6 +25,20 @@ module Feeble::Runtime
       end
     end
 
+    describe "#first" do
+      it "returns the first item on the list" do
+        new_list = list.create(1, 2)
+
+        expect(new_list.first).to eq 1
+      end
+
+      it "returns the first even when it is false XD" do
+        new_list = list.create(false, true)
+
+        expect(new_list.first).to eq false
+      end
+    end
+
     describe "#rest" do
       it "returns a list with all but the first element" do
         new_list = list.create 1, 2, 3, 4
@@ -35,7 +49,13 @@ module Feeble::Runtime
       it "returns an empty list if just one element exists" do
         new_list = list.create 1
 
-        expect(new_list.rest).to eq list::EMPTY
+        expect(new_list.rest).to eq ListEmpty.instance
+      end
+
+      it "if rest is one element, returns a list with one element" do
+        new_list = list.create 1, 2
+
+        expect(new_list.rest).to eq list.create 2
       end
     end
 
@@ -48,10 +68,16 @@ module Feeble::Runtime
       end
 
       it "returns a new_list with just one element when cons(ing) to Empty List" do
-        new_list = list::EMPTY.cons 1
+        new_list = ListEmpty.instance.cons 1
 
         expect(new_list).to eq list.new 1
         expect(new_list.count).to eq 1
+      end
+
+      it "knows how to cons a list with a list" do
+        new_list = list.create(3, 4).cons list.create(1, 2)
+
+        expect(new_list).to eq list.create(list.create(1, 2), 3, 4)
       end
     end
 
@@ -64,7 +90,7 @@ module Feeble::Runtime
       end
 
       it "returns a new_list of one when conj(ing) empty new_list" do
-        new_list = list::EMPTY.conj 1
+        new_list = ListEmpty.instance.conj 1
 
         expect(new_list).to eq list.new 1
         expect(new_list.count).to eq 1
@@ -80,13 +106,9 @@ module Feeble::Runtime
       end
     end
 
-    context "Ruby" do
-      describe "#to_enum" do
-        it "transforms the list into an Enumerator" do
-          new_list = list.create 1, 2, 3, 4, 5, 6, 7
-
-          expect(new_list.to_enum.to_a).to eq [1, 2, 3, 4, 5, 6, 7]
-        end
+    describe "#to_a" do
+      it "transforms a list into a (ruby) array" do
+        expect(list.create(1, 2, 3, 4).to_a).to eq [1, 2, 3, 4]
       end
     end
   end

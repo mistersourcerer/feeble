@@ -24,3 +24,25 @@
 ;; => %host.Array
 
 ;; -----
+
+;; Functions:
+
+;; binop means it can be invoked as "lhs fn rhs" form
++ = -> augend, addend { binop: true } {
+  % augend + addend ;; delegates to the host:
+                    ;; target == augend
+                    ;; method == +
+                    ;; the rest is all parameters
+}
+
+sum = -> augend, addend {
+  {special: false} ;; map with meta data about the function
+  augend + addend ;; evaluation of symbols invoke of + with two params
+}
+
+;; recursive function
+rember = -> atom list { ;; commas or spaces are "the same"
+  return '() { if null?(list) }
+  return rest(list) { if eq?(list(first), atom)  }
+  cons(list(first), rember(atom, rest(list))
+}
