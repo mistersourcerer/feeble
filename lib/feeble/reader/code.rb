@@ -156,10 +156,6 @@ module Feeble::Reader
       Hash[*read(reader, env: env)].tap { reader.next }
     end
 
-    def consume_map_content(map_content, env)
-      Hash[*read(map_content, env: env)]
-    end
-
     def ignore_separators(reader)
       while SEPARATOR.match?(reader.current) && !reader.eof?
         reader.next
