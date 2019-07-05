@@ -131,5 +131,21 @@ module Feeble::Reader
         ]
       end
     end
+
+    context "Numbers" do
+      it "recognizes integers" do
+        expect(reader.read "1").to eq [1]
+        expect(reader.read "1_001").to eq [1001]
+        expect(reader.read "-1").to eq [-1]
+        expect(reader.read "-100_1").to eq [-1001]
+      end
+
+      it "recognizes floats" do
+        expect(reader.read "4.2").to eq [4.2]
+        expect(reader.read "4_200.1").to eq [4200.1]
+        expect(reader.read "-4.2").to eq [-4.2]
+        expect(reader.read "-4_200.1").to eq [-4200.1]
+      end
+    end
   end
 end

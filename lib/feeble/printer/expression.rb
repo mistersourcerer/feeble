@@ -16,7 +16,11 @@ module Feeble::Printer
       if expression.is_a?(Printable)
         expression.to_print { |el| printable_for(el) }
       else
-        expression.inspect
+        if expression.nil?
+          "NIL"
+        else
+          "#{expression.inspect} (#{expression.class})"
+        end
       end
     end
   end

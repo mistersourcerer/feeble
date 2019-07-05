@@ -49,18 +49,21 @@ module Feeble::Reader
 
         if reader.current == ")"
           values << make_expression(component) if component.length > 0
+
           component = ""
           break
         end
 
         if reader.current == "{"
           values << read_map(reader, env)
+
           component = ""
           next
         end
 
         if reader.current == "}"
           values << make_expression(component) if component.length > 0
+
           component = ""
           break
         end
@@ -75,8 +78,8 @@ module Feeble::Reader
     private
 
     LAMBDA = "->"
-
     SEPARATOR = /\A[\s,]/
+    NUMBER = /\A[\d-]([\d\_\.]*\z)/
 
     def make_expression(component)
       return Keyword.new(component) if component.end_with? ":"
@@ -90,11 +93,28 @@ module Feeble::Reader
     end
 
     def value_of(component)
-      if component == "true" || component == "false"
+      case
+      when component == "true" || component == "false"
         component == "true"
+      when NUMBER.match?(component)
+        /\./.match?(component) ? Float(component) : Integer(component)
       else
         nil
       end
+    end
+
+    def read_quote(reader, env)
+      reader.next
+
+      args =
+        if reader.current == "("
+          List.create(read_list(reader, env))
+        else
+          expression_content = reader.until_next(SEPARATOR, or_eof: true)
+          read(expression_content, env: env)
+        end
+
+      List.create(Symbol.new("quote"), *args)
     end
 
     def read_lambda(reader, env)
@@ -144,20 +164,6 @@ module Feeble::Reader
       while SEPARATOR.match?(reader.current) && !reader.eof?
         reader.next
       end
-    end
-
-    def read_quote(reader, env)
-      reader.next
-
-      args =
-        if reader.current == "("
-          List.create(read_list(reader, env))
-        else
-          expression_content = reader.until_next(SEPARATOR, or_eof: true)
-          read(expression_content, env: env)
-        end
-
-      List.create(Symbol.new("quote"), *args)
     end
 
     def read_list(reader, env)
