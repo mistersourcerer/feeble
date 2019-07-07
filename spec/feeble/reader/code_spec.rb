@@ -147,5 +147,11 @@ module Feeble::Reader
         expect(reader.read "-4_200.1").to eq [-4200.1]
       end
     end
+
+    context "String" do
+      it "regonizes the \" string delimiter" do
+        expect(reader.read "\"lol\"").to eq ["lol"]
+      end
+    end
   end
 end

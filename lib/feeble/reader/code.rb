@@ -32,6 +32,14 @@ module Feeble::Reader
 
         if reader.current == "'"
           values << read_quote(reader, env)
+
+          component = ""
+          next
+        end
+
+        if reader.current == "\""
+          values << read_string(reader, env)
+
           component = ""
           next
         end
@@ -115,6 +123,12 @@ module Feeble::Reader
         end
 
       List.create(Symbol.new("quote"), *args)
+    end
+
+    def read_string(reader, env)
+      reader.next
+
+      reader.until_next("\"")
     end
 
     def read_lambda(reader, env)
