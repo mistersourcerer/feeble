@@ -8,6 +8,8 @@ module Feeble::Language::Ruby
       register Symbol.new(:define), Define.new
       register Symbol.new(:quote), Quote.new
       register Symbol.new(:lambda), Feeble::Language::Ruby::Lambda.new
+      register Symbol.new(:print), Feeble::Language::Ruby::Print.new
+      register Symbol.new(:println), Feeble::Language::Ruby::Println.new
     end
   end
 end

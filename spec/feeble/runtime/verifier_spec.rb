@@ -28,5 +28,18 @@ module Feeble::Runtime
         expect(verify.keyword?(nil)).to eq false
       end
     end
+
+    describe "#fn?" do
+      class SomeFN
+        include Feeble::Runtime::Invokable
+      end
+
+      it "returns true only for Functions" do
+        expect(verify.fn?(SomeFN.new)).to eq true
+        expect(verify.fn?(:omg)).to eq false
+        expect(verify.fn?(nil)).to eq false
+        expect(verify.fn?(Proc.new {})).to eq false
+      end
+    end
   end
 end

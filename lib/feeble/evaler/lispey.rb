@@ -15,7 +15,10 @@ module Feeble::Evaler
     private
 
     def eval_list(list, env)
-      if fn = env.lookup(list.first) # && @verify.fn? fn
+      first_form = fn = env.lookup(list.first)
+      # return eval_list(first_form, env) if @verify.list? first_form
+
+      if @verify.fn? fn
         if fn.prop?(:special)
           env.register Feeble::Runtime::Symbol.new("%xenv"), env
           return fn.invoke(*Array(list.rest), scope: env)
@@ -25,8 +28,6 @@ module Feeble::Evaler
           }
           return fn.invoke(*evaled, scope: env)
         end
-        # else, we eval the params:
-        # fn.invoke eval each car of list.rest
       end
 
       raise "Can't invoke <#{list.first}>, not a function"

@@ -11,5 +11,9 @@ module Feeble::Runtime
     def keyword?(obj)
       obj.is_a? Keyword
     end
+
+    def fn?(obj)
+      obj.is_a? Invokable
+    end
   end
 end

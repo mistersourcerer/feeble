@@ -20,6 +20,10 @@ module Feeble::Reader
 
           if component.length > 0
             if known_syntax = @syntax.search(component)
+              # Binary operation?
+              #   - remove last bit from value
+              #   - pass as parameter like:
+              #     read_binop reader, env, env.lookup(component)
               values << send(known_syntax, reader, env)
             else
               values << make_expression(component)
