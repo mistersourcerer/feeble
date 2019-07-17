@@ -4,6 +4,7 @@ module Feeble::Runtime
       @registry = {}
       @verify = Verifier.new
       @fallback = fallback
+      @funcs = Tree.new
     end
 
     def lookup(id)
@@ -12,7 +13,14 @@ module Feeble::Runtime
 
     def register(name, value = nil)
       check_name_type name
+      if @verify.fn? value
+        @funcs.add name.to_s, value
+      end
       @registry[name] = value
+    end
+
+    def fn(name)
+      @funcs.search name.to_s
     end
 
     protected

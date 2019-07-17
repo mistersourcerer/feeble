@@ -8,6 +8,16 @@ module Feeble::Runtime
 
         expect(env.lookup(Symbol.new(:omg))).to eq "lol"
       end
+
+      it "registers functions on a specific 'area'" do
+        fn = Feeble::Language::Ruby::Print.new
+        env.register Symbol.new(:fn), fn
+
+        expect(env.lookup(Symbol.new(:fn))).to eq fn
+        expect(env.fn(:fn)).to eq fn
+        expect(env.fn("fn")).to eq fn
+        expect(env.fn(Symbol.new(:fn))).to eq fn
+      end
     end
 
     describe "#lookup" do
@@ -22,6 +32,12 @@ module Feeble::Runtime
         inner = Env.new env
 
         expect(inner.lookup(Symbol.new("lol"))).to eq "bbq"
+      end
+    end
+
+    describe "#fn" do
+      it "returns nil if no function with the given name is registered" do
+        expect(env.fn(:nope)).to eq nil
       end
     end
   end
