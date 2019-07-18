@@ -14,16 +14,11 @@ module Feeble::Reader
       values = []
 
       while reader.next
-        if SEPARATOR.match?(reader.current) &&
-            (component.length > 0 || (reader.prev == "{" || reader.prev == "("))
+        if SEPARATOR.match?(reader.current)
           ignore_separators(reader)
 
           if component.length > 0
             if known_syntax = @syntax.search(component)
-              # Binary operation?
-              #   - remove last bit from value
-              #   - pass as parameter like:
-              #     read_binop reader, env, env.lookup(component)
               values << send(known_syntax, reader, env)
             else
               values << make_expression(component)
@@ -32,6 +27,21 @@ module Feeble::Reader
             ignore_separators(reader)
             component = ""
           end
+        end
+
+        if reader.current == ")"
+          values << make_expression(component) if component.length > 0
+
+          component = ""
+          next
+        end
+
+        if reader.current == "}"
+          values << make_expression(component) if component.length > 0
+
+          component = ""
+          # TODO: Why are we breaking here? XD
+          break
         end
 
         if reader.current == "'"
@@ -59,25 +69,11 @@ module Feeble::Reader
           next
         end
 
-        if reader.current == ")"
-          values << make_expression(component) if component.length > 0
-
-          component = ""
-          break
-        end
-
         if reader.current == "{"
           values << read_map(reader, env)
 
           component = ""
           next
-        end
-
-        if reader.current == "}"
-          values << make_expression(component) if component.length > 0
-
-          component = ""
-          break
         end
 
         component << reader.current if reader.current
