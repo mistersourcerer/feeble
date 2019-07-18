@@ -1,5 +1,11 @@
 module Feeble::Runtime
   class ListFunctions
+    attr_reader :nill
+
+    def initialize(nill = ListEmpty.instance)
+      @nill = nill
+    end
+
     def cons(a, list)
       list.cons(a)
     end
@@ -22,10 +28,6 @@ module Feeble::Runtime
       cons(
         car(list),
         take(n - 1, cdr(list)))
-    end
-
-    def nill
-      ListEmpty.instance
     end
   end
 end

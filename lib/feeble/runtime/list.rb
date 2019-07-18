@@ -20,6 +20,10 @@ module Feeble::Runtime
       @fn = self.class.fn
     end
 
+    def nill
+      ListEmpty.instance
+    end
+
     def cons(obj)
       self.class.new obj, self, count: count + 1
     end
@@ -36,11 +40,6 @@ module Feeble::Runtime
       }
     end
 
-    def ==(other)
-      return false if self.class != other.class
-      same? self, other
-    end
-
     def to_a
       [first] + rest.to_a
     end
@@ -49,6 +48,13 @@ module Feeble::Runtime
       and_more = count > 5 ? " ..." : ""
       elements = Array(@fn.take(5, self))
       "(#{elements.map{ |el| printable_for.call(el) }.join(" ")}#{and_more})"
+    end
+
+    private
+
+    def same?(list, other)
+      return true if list == ListEmpty.instance && other == ListEmpty.instance
+      list.first == other.first && same?(list.rest, other.rest)
     end
   end
 end

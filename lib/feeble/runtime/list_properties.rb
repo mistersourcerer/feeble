@@ -5,7 +5,7 @@ module Feeble::Runtime
     end
 
     def rest
-      return ListEmpty.instance if @rest.nil?
+      return nill if @rest.nil?
       @rest
     end
 
@@ -30,6 +30,11 @@ module Feeble::Runtime
       rest
     end
 
+    def ==(other)
+      return false if self.class != other.class
+      same? self, other
+    end
+
     def eql?(other)
       self == other
     end
@@ -38,11 +43,8 @@ module Feeble::Runtime
       @first.hash + @second.hash + :fbl_list.hash
     end
 
-    private
-
-    def same?(list, other)
-      return true if list == ListEmpty.instance && other == ListEmpty.instance
-      list.first == other.first && same?(list.rest, other.rest)
+    def nill
+      @nill || ListEmpty.instance
     end
   end
 end
