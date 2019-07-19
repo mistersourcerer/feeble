@@ -3,6 +3,7 @@ module Feeble::Runtime
     include ListProperties
 
     def self.create(body)
+      body = String(body)
       return StrEmpty.instance if body.length == 0
 
       new body[0], create(body[1..-1]), count: body.length, body: body
@@ -10,9 +11,9 @@ module Feeble::Runtime
 
     def initialize(char, rest = StrEmpty.instance, count: 1, body: nil)
       @count = count
-      @first = char
+      @first = String(char)
       @rest = rest
-      @body = body || char
+      @body = String(body || @first + String(rest))
       @fn = ListFunctions.new(StrEmpty.instance)
     end
 
@@ -21,7 +22,11 @@ module Feeble::Runtime
     end
 
     def cons(char)
-      self.class.new char, self, count: count + 1
+      if String(char).length > 1
+        self.class.create String(char) + self.to_s
+      else
+        self.class.new char, self, count: count + 1
+      end
     end
 
     def to_s
@@ -35,7 +40,11 @@ module Feeble::Runtime
     def to_print
       and_more = count > 5 ? " ..." : ""
       elements = fn.take(5, self)
-      "\"#{elements}\"#{and_more})"
+      "\"#{elements}#{and_more}\""
+    end
+
+    def inspect
+      "#{@body[0..20]} ...(str [#{@body.length} chars])"
     end
 
     private

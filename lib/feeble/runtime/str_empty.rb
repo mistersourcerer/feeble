@@ -9,13 +9,13 @@ module Feeble::Runtime
       Str.create char
     end
 
-    # def conj(obj)
-    #   cons obj
-    # end
+    def conj(char)
+      cons char
+    end
 
-    # def apnd(obj)
-    #   cons obj
-    # end
+    def apnd(char)
+      cons char
+    end
 
     def ==(other)
       other.is_a? self.class
