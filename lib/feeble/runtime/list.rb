@@ -28,18 +28,6 @@ module Feeble::Runtime
       self.class.new obj, self, count: count + 1
     end
 
-    def conj(*args)
-      args.reduce(self) { |list, obj|
-        self.class.new obj, list, count: list.count + 1
-      }
-    end
-
-    def apnd(*args)
-      args.reduce(self) { |list, obj|
-        self.class.new list.first, list.rest.apnd(obj), count: list.count + 1
-      }
-    end
-
     def to_a
       [first] + rest.to_a
     end

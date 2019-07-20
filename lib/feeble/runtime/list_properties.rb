@@ -30,6 +30,22 @@ module Feeble::Runtime
       rest
     end
 
+    def apnd(*args)
+      args.reduce(self) { |list, obj|
+        self.class.new list.first, list.rest.apnd(obj), count: list.count + 1
+      }
+    end
+
+    def conj(*args)
+      args.reduce(self) { |list, obj|
+        self.class.new obj, list, count: list.count + 1
+      }
+    end
+
+    def empty?
+      nill == self
+    end
+
     def ==(other)
       return false if self.class != other.class
       same? self, other
