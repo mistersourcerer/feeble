@@ -35,15 +35,4 @@ module Feeble::Runtime
       raise "Only Symbols can be associated with values, not <#{name.inspect}>"
     end
   end
-
-  require "singleton"
-
-  class EnvNull
-    include Singleton
-
-    def lookup(_)
-      # TODO: raise symbol not registered?
-      nil
-    end
-  end
 end
