@@ -10,15 +10,12 @@ module Feeble::Runtime
     end
 
     def initialize(char, rest = StrEmpty.instance, count: 1, body: nil)
+      @nill = StrEmpty.instance
       @count = count
       @first = String(char)
       @rest = rest
       @body = String(body || @first + String(rest))
-      @fn = ListFunctions.new(StrEmpty.instance)
-    end
-
-    def nill
-      StrEmpty.instance
+      @fn = ListFunctions.new(nill)
     end
 
     def cons(char)

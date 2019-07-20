@@ -25,6 +25,10 @@ module Feeble::Runtime
       []
     end
 
+    def to_s
+      ""
+    end
+
     def nill
       StrEmpty.instance
     end
