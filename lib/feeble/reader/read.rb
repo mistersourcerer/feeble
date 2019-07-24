@@ -7,8 +7,8 @@ module Feeble::Reader
       @fn = ListFunctions.new(StrEmpty.instance)
       @number = Number.new
 
-      arity(Symbol.new(:code)) { |env|
-        read Str.create(env.lookup(Symbol.new(:code))), env
+      arity(Feeble::Runtime::Symbol.new(:code)) { |env|
+        read Str.create(env.lookup(Feeble::Runtime::Symbol.new(:code))), env
       }
     end
 
@@ -18,37 +18,15 @@ module Feeble::Reader
 
     attr_reader :fn
 
-    def read(string, env, token: Str.create(""), code: [])
-      if fn.empty? string
-        if !token.empty?
-          atom, _ = read_token(string, env, token: token, code: code)
-          code << atom
-        end
+    Sym = Feeble::Runtime::Symbol
 
-        return code
-      end
+    def read(code, env, expressions: [])
+      return expressions if fn.empty?(code)
 
-      new_string, new_token = *
-        case String(string.first)
-        when SEPARATOR
-          read_separator string, env, token: token, code: code
-        when Number::START
-          read_number string, env, code: code
-        else
-          [string.rest, token.apnd(string.first)]
-        end
+      token, remaining_code = *next_token(code)
+      expressions << token
 
-      read(new_string, env, token: new_token, code: code)
-    end
-
-    def read_separator(string, env, token: Str.create(""), code: [])
-      return [string, token] if token.count == 0
-
-      atom, new_string = read_token(
-        ignore_separators(string.rest), env, token: token, code: code)
-      code << atom
-
-      [new_string, Str.create("")]
+      read(remaining_code, env, expressions: expressions)
     end
 
     def ignore_separators(string)
@@ -58,19 +36,18 @@ module Feeble::Reader
       ignore_separators(string.rest)
     end
 
-    def read_number(string, env, token: Str.create(""), code: [])
-      number, new_string = *@number.invoke(string)
-      code << number
+    def next_token(code, looking_at = StrEmpty.instance)
+      return [Sym.new(looking_at), StrEmpty.instance] if fn.empty? code
 
-      [ignore_separators(new_string), Str.create("")]
-    end
-
-    def read_token(string, env, token: Str.create(""), code: [])
-      # 1) token is a unary op function? process. Function is reader?
-      # 2) token anything else, check if next token is a binary op
-      #     if so, also read one more token and process
-      # 3) else, return the symbolized token
-      [Symbol.new(token), string]
+      case String(code.first)
+      when SEPARATOR
+        [Sym.new(looking_at), ignore_separators(code.rest)]
+      when Number::START
+        number, remaining_code = *@number.invoke(code)
+        [number, ignore_separators(remaining_code)]
+      else
+        next_token(code.rest, looking_at.apnd(code.first))
+      end
     end
   end
 end

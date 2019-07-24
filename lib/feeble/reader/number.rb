@@ -9,8 +9,8 @@ module Feeble::Reader
     def initialize
       prop :reader
 
-      arity(Symbol.new(:code)) { |env|
-        source_code = env.lookup(Symbol.new(:code))
+      arity(Feeble::Runtime::Symbol.new(:code)) { |env|
+        source_code = env.lookup(Feeble::Runtime::Symbol.new(:code))
         number, code = read_number_from source_code
         [parse_number(number), code]
       }
