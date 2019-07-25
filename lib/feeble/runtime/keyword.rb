@@ -20,7 +20,7 @@ module Feeble::Runtime
     end
 
     def hash
-      value.hash + :atom.hash
+      value.hash + :keyword.hash
     end
 
     def to_s

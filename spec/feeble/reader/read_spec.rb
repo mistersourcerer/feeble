@@ -19,5 +19,13 @@ module Feeble::Reader
         Feeble::Runtime::Symbol.new("lol"),
       ]
     end
+
+    it "reads keywords into... keywords" do
+      expect(reader.invoke("omg :lol bbq:")).to eq [
+        Feeble::Runtime::Symbol.new("omg"),
+        Feeble::Runtime::Keyword.new(":lol"),
+        Feeble::Runtime::Keyword.new("bbq:"),
+      ]
+    end
   end
 end

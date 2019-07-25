@@ -23,7 +23,8 @@ module Feeble::Reader
     def read(code, env, expressions: [])
       return expressions if fn.empty?(code)
 
-      token, remaining_code = *next_token(code)
+      token, remaining_code = *next_token(code, env)
+      # the whole read two token at once can be done here...
       expressions << token
 
       read(remaining_code, env, expressions: expressions)
@@ -36,17 +37,32 @@ module Feeble::Reader
       ignore_separators(string.rest)
     end
 
-    def next_token(code, looking_at = StrEmpty.instance)
-      return [Sym.new(looking_at), StrEmpty.instance] if fn.empty? code
+    def next_token(code, env, looking_at = StrEmpty.instance)
+      if fn.empty? code
+        return [handle_token(looking_at, env), StrEmpty.instance]
+      end
 
       case String(code.first)
       when SEPARATOR
-        [Sym.new(looking_at), ignore_separators(code.rest)]
+        [handle_token(looking_at, env), ignore_separators(code.rest)]
       when Number::START
         number, remaining_code = *@number.invoke(code)
         [number, ignore_separators(remaining_code)]
       else
-        next_token(code.rest, looking_at.apnd(code.first))
+        next_token(code.rest, env, looking_at.apnd(code.first))
+      end
+    end
+
+    def handle_token(token, env)
+      # TODO: can be:
+      #   - an invokation ( some() )
+      #   - an invokation ( some(more 1 stuff) )
+      #   - an invokation ( some({ more: stuff }) )
+      case
+      when token.first == ":" || token.to_s[-1] == ":"
+        Keyword.new(token)
+      else
+        Sym.new(token)
       end
     end
   end
