@@ -1,6 +1,7 @@
 ;; This is a comment.
 ;;
 
+;; -----
 ;; Host (Ruby) Interop:
 
 ::puts(1)
@@ -24,8 +25,12 @@
 ;; => %host.Array
 
 ;; -----
-
 ;; Functions:
+
+sum = -> augend, addend {
+  {special: false} ;; map with meta data about the function
+  augend + addend ;; evaluation of symbols invoke of + with two params
+}
 
 ;; binop means it can be invoked as "lhs fn rhs" form
 + = -> augend, addend { binop: true } {
@@ -35,14 +40,9 @@
                     ;; the rest is all parameters
 }
 
-sum = -> augend, addend {
-  {special: false} ;; map with meta data about the function
-  augend + addend ;; evaluation of symbols invoke of + with two params
-}
-
 ;; recursive function
 rember = -> atom list { ;; commas or spaces are "the same"
-  return '() { if null?(list) }
-  return rest(list) { if eq?(list(first), atom)  }
-  cons(list(first), rember(atom, rest(list))
+  return '() if: null?(list)
+  return rest(list) if: list(first) == atom
+  cons(first, rember(atom, rest(list))
 }

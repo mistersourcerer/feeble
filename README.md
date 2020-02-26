@@ -1,8 +1,8 @@
 # Feeble
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/feeble`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+A small programming language for education purposes.
+It is functional, favoring immuatbility and supports TCO.
+Meant to be hosted, uses Ruby as a "runtime".
 
 ## Installation
 
