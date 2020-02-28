@@ -2,13 +2,13 @@ require "immutable/vector"
 require "immutable/list"
 
 class Feeble::Reader
-  def next(source)
+  def next(source, col = 1)
     reader = reader_with source
     token_content = ""
 
     while(char = reader.next) do
       token_content << char
-      if token = tokenize(token_content, reader)
+      if token = tokenize(token_content, reader, col)
         return token
       end
     end
@@ -46,12 +46,12 @@ class Feeble::Reader
     StringIO.new source
   end
 
-  def tokenize(token_content, reader)
-    return Immutable::Vector[token_content, {type: :separator}] if separator?(token_content)
-    return Immutable::Vector[token_content, {type: :new_line}] if new_line?(token_content)
+  def tokenize(token_content, reader, col)
+    return Immutable::Vector[token_content, {type: :separator, start: col, end: col}] if separator?(token_content)
+    return Immutable::Vector[token_content, {type: :new_line, start: col, end: col}] if new_line?(token_content)
 
     delimiter = delimiters.find { |d| d.first == token_content }
-    return read_delimited_token(delimiter, reader) if delimiter
+    return read_delimited_token(delimiter, reader, col) if delimiter
   end
 
   def separator?(token_content)
@@ -81,12 +81,9 @@ class Feeble::Reader
       content << char
     end
 
-    meta =
-      if char == close || close == "\n"
-        { type: type }
-      else
-        { type: type, open: true }
-      end
+    meta = (char == close || close == "\n") ? {} : {open: true }
+    end_at = (open.length + content.length + close.length)
+    meta = meta.merge(type: type, start: col, end: end_at )
 
     Immutable::Vector[transformer.call(content), meta]
   end
