@@ -60,6 +60,22 @@ RSpec.describe Feeble::Reader do
           )
         end
       end
+
+      context "blocks" do
+        it "recognizes blocks" do
+          token = reader.next "{\"one\",\"block\"\n\"three strings\"}"
+
+          expect(token).to be_a_token :block
+          expect(token[0]).to include(
+            a_token(:string, "one"),
+            a_token(:separator, ","),
+            a_token(:string, "block"),
+            a_token(:new_line, "\n"),
+            a_token(:string, "three strings"),
+          )
+        end
+      end
+
     end
   end
 end

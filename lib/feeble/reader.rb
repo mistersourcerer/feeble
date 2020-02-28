@@ -15,6 +15,21 @@ class Feeble::Reader
     raise "unrecognizable token #{token_content}"
   end
 
+  def call(source)
+    reader = Feeble::PushbackReader.new(source)
+    col = 1
+
+    tokens = Immutable::Vector.new
+    while(!reader.eof?)
+      token = self.next(reader, col)
+      tokens = tokens.add token
+      _, meta = token
+      col = meta[:end] + 1
+    end
+
+    tokens
+  end
+
   private
 
   def reader_with(source)
@@ -48,29 +63,16 @@ class Feeble::Reader
 
   def delimiters
     @delimiters ||= [
-      ["\"", "\"", :string],
-      [";",  "\n", :comment],
-      ["[",  "]",  :vector, ->(content) { collect(content) }]
+      ["\"", "\"",  :string],
+      [";",  "\n",  :comment],
+      ["[",  "]",   :vector, ->(content) { call(content) }],
+      ["{",  "}",    :block, ->(content) { call(content) }],
+      ["(", ")",    :list, ->(content) { Immutable::List[*call(content)] }]
     ]
   end
 
-  def collect(content)
-    reader = Feeble::PushbackReader.new(content)
-    tokens = Immutable::Vector.new
-
-    while(!reader.eof?)
-      tokens = tokens.add self.next(reader)
-    end
-
-    tokens
-  end
-
-  def vectorize(content)
-    Immutable::Vector[*collect(content)]
-  end
-
-  def read_delimited_token(delimiter, reader)
-    _, close, type, transformer = delimiter
+  def read_delimited_token(delimiter, reader, col)
+    open, close, type, transformer = delimiter
     transformer ||= (@_transformer ||= ->(content) { content })
     content = ""
 
