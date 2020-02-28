@@ -1,4 +1,5 @@
 require "immutable/vector"
+require "immutable/list"
 
 class Feeble::Reader
   def next(source)
@@ -67,7 +68,7 @@ class Feeble::Reader
       [";",  "\n",  :comment],
       ["[",  "]",   :vector, ->(content) { call(content) }],
       ["{",  "}",    :block, ->(content) { call(content) }],
-      ["(", ")",    :list, ->(content) { Immutable::List[*call(content)] }]
+      ["(",  ")",    :list, ->(content) { Immutable::List[*call(content)] }]
     ]
   end
 

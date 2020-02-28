@@ -76,6 +76,21 @@ RSpec.describe Feeble::Reader do
         end
       end
 
+      context "lists" do
+        it "recongnizes lists" do
+          token = reader.next "(\"and\" \"now\" \"a list\"\n)"
+
+          expect(token).to be_a_token :list
+          expect(token[0].head).to be_a_token(:string, "and")
+          expect(token[0].tail.to_a).to include(
+            a_token(:separator, " "),
+            a_token(:string, "now"),
+            a_token(:separator, " "),
+            a_token(:string, "a list"),
+            a_token(:new_line, "\n"),
+          )
+        end
+      end
     end
   end
 end
