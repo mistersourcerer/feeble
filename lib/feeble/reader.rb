@@ -33,6 +33,10 @@ class Feeble::Reader
 
   private
 
+  DIGIT = /\A[\d-]/
+  NUMERIC = /\A[\d_]/
+  SEPARATOR = /\A[,\s]/
+
   def reader_with(source)
     return source if source.is_a? Feeble::PushbackReader
 
@@ -49,6 +53,7 @@ class Feeble::Reader
   def tokenize(token_content, reader, col)
     return token(token_content, {type: :separator, start: col, end: col}) if separator?(token_content)
     return token(token_content, {type: :new_line, start: col, end: col}) if new_line?(token_content)
+    return read_number(token_content, reader, col) if number?(token_content, reader)
 
     delimiter = delimiters.find { |d| d.first == token_content }
     return read_delimited_token(delimiter, reader, col) if delimiter
@@ -60,6 +65,42 @@ class Feeble::Reader
 
   def new_line?(token_content)
     token_content == "\n"
+  end
+
+  def number?(token_content, reader)
+    DIGIT.match?(token_content) || ending?(reader.peek)
+  end
+
+  def ending?(char)
+    SEPARATOR.match?(char) || char == nil
+  end
+
+  def read_number(start, reader, col)
+    number = read_digits start, reader
+    value, meta =
+      if reader.peek == "."
+        number = read_digits number + reader.next, reader
+        [Float(number), {type: :float}]
+      else
+        [Integer(number), {type: :int}]
+      end
+
+    if !ending?(reader.peek)
+      raise Feeble::Syntax::NumberFormatError.new number + reader.peek
+    end
+
+    token value, meta.merge(start: col, end: col + number.length)
+  end
+
+  def read_digits(start, reader)
+    number = start
+
+    while NUMERIC.match?(char = reader.next)
+      number << char
+    end
+
+    reader.push char
+    number
   end
 
   def delimiters
@@ -82,14 +123,13 @@ class Feeble::Reader
     open, close, type, _ = delimiter
 
     content = ""
+    # TODO: this won't work for delimiters bigger than one char
     while((char = reader.next) && char != close)
       content << char
     end
 
     end_at = (open.length + content.length + close.length)
     meta = (char == close || close == "\n") ? {} : {open: true}
-    meta.merge!(type: type, start: col, end: end_at )
-
     [content, meta.merge(type: type, start: col, end: end_at)]
   end
 
