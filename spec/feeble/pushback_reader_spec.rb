@@ -30,4 +30,26 @@ RSpec.describe Feeble::PushbackReader do
       expect(reader.next).to eq "l"
     end
   end
+
+  describe "#peek" do
+    let(:content) { StringIO.new("OMG") }
+
+    it "shows the next char without poping it from the buffer" do
+      expect(reader.peek).to eq "O"
+      expect(reader.next).to eq "O"
+    end
+
+    it "reveals N chars, given by param, without popping them from buffer" do
+      expect(reader.peek(3)).to eq "OMG"
+      expect(reader.next).to eq "O"
+    end
+
+    it "returns nil if no more chars available" do
+      reader.next
+      reader.next
+      reader.next
+
+      expect(reader.peek).to eq nil
+    end
+  end
 end
