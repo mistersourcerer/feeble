@@ -47,8 +47,8 @@ class Feeble::Reader
   end
 
   def tokenize(token_content, reader, col)
-    return Immutable::Vector[token_content, {type: :separator, start: col, end: col}] if separator?(token_content)
-    return Immutable::Vector[token_content, {type: :new_line, start: col, end: col}] if new_line?(token_content)
+    return token(token_content, {type: :separator, start: col, end: col}) if separator?(token_content)
+    return token(token_content, {type: :new_line, start: col, end: col}) if new_line?(token_content)
 
     delimiter = delimiters.find { |d| d.first == token_content }
     return read_delimited_token(delimiter, reader, col) if delimiter
@@ -67,24 +67,39 @@ class Feeble::Reader
       ["\"", "\"",  :string],
       [";",  "\n",  :comment],
       ["[",  "]",   :vector, ->(content) { call(content) }],
-      ["{",  "}",    :block, ->(content) { call(content) }],
-      ["(",  ")",    :list, ->(content) { Immutable::List[*call(content)] }]
+      ["{",  "}",   :block, ->(content) { call(content) }],
+      ["(",  ")",   :list, ->(content) { Immutable::List[*call(content)] }]
     ]
   end
 
   def read_delimited_token(delimiter, reader, col)
-    open, close, type, transformer = delimiter
-    transformer ||= (@_transformer ||= ->(content) { content })
-    content = ""
+    content, meta = read_until delimiter, reader, col
+    token_value = transformer_from(delimiter).call(content)
+    token token_value, meta
+  end
 
+  def read_until(delimiter, reader, col)
+    open, close, type, _ = delimiter
+
+    content = ""
     while((char = reader.next) && char != close)
       content << char
     end
 
-    meta = (char == close || close == "\n") ? {} : {open: true }
     end_at = (open.length + content.length + close.length)
-    meta = meta.merge(type: type, start: col, end: end_at )
+    meta = (char == close || close == "\n") ? {} : {open: true}
+    meta.merge!(type: type, start: col, end: end_at )
 
-    Immutable::Vector[transformer.call(content), meta]
+    [content, meta.merge(type: type, start: col, end: end_at)]
+  end
+
+  def transformer_from(delimiter)
+    _, _, _, transformer = delimiter
+    @_default_transformer ||= ->(content) { content }
+    transformer || @_default_transformer
+  end
+
+  def token(token_value, meta)
+    Immutable::Vector[token_value, meta]
   end
 end
