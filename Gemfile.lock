@@ -44,7 +44,7 @@ DEPENDENCIES
   bundler (~> 2.0)
   feeble!
   pry-byebug (~> 3)
-  rake
+  rake (~> 13.0)
   rspec
 
 BUNDLED WITH
