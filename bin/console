@@ -10,8 +10,5 @@ require "feeble"
 require "pry"
 
 include Feeble
-include Feeble::Reader
-include Feeble::Evaler
-include Feeble::Runtime
 
 Pry.start
